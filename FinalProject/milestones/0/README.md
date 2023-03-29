@@ -23,9 +23,9 @@ The first stage we learned in the software development life cycle is planning.
 - Date: 3/22
 	- Task/Milestone to be completed: M2 Integration assignments
 - Date: 3/30
-	- Task/Milestone to be completed: M3 Network
-- Date: 3/31
 	- Task/Milestone to be completed: M4 Check-in #1
+- Date: 4/10
+	- Task/Milestone to be completed: M3 Network
 - Date: 4/13
 	- Task/Milestone to be completed: M5 Extra feature
 - Date: 4/14
