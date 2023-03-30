@@ -13,7 +13,7 @@ void receiveThread(shared Socket socket) {
     Socket s = cast(Socket) socket;
     scope(exit) s.close();
     while (true) {
-        char[1024] buffer;
+        byte[1024] buffer;
         long nbytes = s.receive(buffer);
         // If server disconnected, exit thread
         if (nbytes <= 0) {
@@ -22,8 +22,11 @@ void receiveThread(shared Socket socket) {
         }
 
         // Print out the received message
-        writeln("Received message: ", buffer[0..nbytes]);
-        writeln(">");
+        writeln("Received message: ", buffer[0 ..nbytes]);
+//       int[5]  test = cast(int[])buffer[0 ..nbytes].dup ;
+        writeln(buffer[0]);
+        writeln(buffer[1]);
+        write(">");
     }
 
     // Close the socket
@@ -52,9 +55,16 @@ void main(){
 
     spawn(&receiveThread, cast(shared) socket);
 	write(">");
+    byte [] test;
+    test ~= 1;
+    test ~= 2;
+    writeln(test);
+    auto dataBytes = test.dup;
+    writeln(dataBytes);
     foreach(line; stdin.byLine){
 		// Send the packet of information
-        socket.send(line);
+//        socket.send(line);
+        socket.send(dataBytes);
 		// Now we'll immedietely block and await data from the server
 		// auto fromServer = buffer[0 .. socket.receive(buffer)];
         // writeln("Server echos back: ", fromServer);

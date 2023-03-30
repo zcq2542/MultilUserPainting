@@ -4,6 +4,9 @@
 // 
 import std.socket;
 import std.stdio;
+import Packet : Packet;
+import std.algorithm;
+import std.array;
 
 // Entry point to Server
 void main(){
@@ -32,7 +35,9 @@ void main(){
     Socket[] connectedClientsList;
 
     // Message buffer will be 1024 bytes 
-    char[1024] buffer;
+    byte[1024] buffer;
+
+    byte[Packet.sizeof] buffer2;
 
     // Main application loop for the server
 	writeln("Awaiting client connections");
@@ -58,7 +63,17 @@ void main(){
 					// When the message is received, then
 					// we send that message from the 
 					// server to the client
-                    auto got = client.receive(buffer);					
+                    auto got = client.receive(buffer);
+                    if (got <= 0) {
+                        // client.close();
+                        //connectedClientsList = connectedClientsList.filter(c => c !is client).array;
+                        // break;
+                        // writeln("got <= 0");
+                        readSet.remove(client);
+                        connectedClientsList = remove(connectedClientsList, idx);
+                        writeln("client", idx+1, "disconnect");
+                        continue;
+                    }                    
 					// Adding +1 to client index to match number of clients.
 					writeln("client",idx+1,">",buffer[0 .. got]);
 					// Send whatever was 'got' from the client.
