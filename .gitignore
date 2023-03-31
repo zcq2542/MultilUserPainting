@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/finalproject-aurora
+finalproject-aurora.so
+finalproject-aurora.dylib
+finalproject-aurora.dll
+finalproject-aurora.a
+finalproject-aurora.lib
+finalproject-aurora-test-*
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
