@@ -9,6 +9,7 @@ import loader = bindbc.loader.sharedlib;
 import Surface:Surface;
 
 import Color:Color;
+import Spot:Spot;
 
 const SDLSupport ret;
 
@@ -66,8 +67,8 @@ class SDLApp{
                                         640,
                                         480, 
                                         SDL_WINDOW_SHOWN);
-	usableSurface = Surface(640,480);
-	currentColor = Color(32,128,255);
+		usableSurface = Surface(640,480);
+		currentColor = Color(32,128,255);
  	}
     
  	~this(){
@@ -82,6 +83,8 @@ class SDLApp{
 	// Flag for determining if we are 'drawing' (i.e. mouse has been pressed
 	//                                                but not yet released)
 	bool drawing = false;
+
+	Spot[] spots = new Spot[5];
 
 	// Main application loop that will run until a quit event has occurred.
 	// This is the 'main graphics loop'
@@ -100,6 +103,8 @@ class SDLApp{
 				drawing=true;
 			}else if(e.type == SDL_MOUSEBUTTONUP){
 				drawing=false;
+				writeln(spots);
+				spots.length = 0;
 			}else if(e.type == SDL_MOUSEMOTION && drawing){
 				// retrieve the position
 				int xPos = e.button.x;
@@ -111,6 +116,7 @@ class SDLApp{
 				for(int w=-brushSize; w < brushSize; w++){
 					for(int h=-brushSize; h < brushSize; h++){
 						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
+						spots ~= Spot(xPos+w, yPos+h, currentColor);
 					}
 				}
 			}else if(e.key.keysym.sym == SDLK_r) {
