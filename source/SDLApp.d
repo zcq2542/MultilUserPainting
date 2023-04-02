@@ -8,6 +8,8 @@ import loader = bindbc.loader.sharedlib;
 
 import Surface:Surface;
 
+import Color:Color;
+
 const SDLSupport ret;
 
 shared static this() {
@@ -52,7 +54,8 @@ shared static ~this(){
 
 class SDLApp{
     SDL_Window* window;
-	Surface usableSurface;
+    Surface usableSurface;
+    Color currentColor;
 
     this(){
 	 	// Handle initialization...
@@ -64,6 +67,7 @@ class SDLApp{
                                         480, 
                                         SDL_WINDOW_SHOWN);
 	usableSurface = Surface(640,480);
+	currentColor = Color(32,128,255);
  	}
     
  	~this(){
@@ -106,9 +110,11 @@ class SDLApp{
 				int brushSize=4;
 				for(int w=-brushSize; w < brushSize; w++){
 					for(int h=-brushSize; h < brushSize; h++){
-						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,32,128,255);
+						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
 					}
 				}
+			}else if(e.key.keysym.sym == SDLK_r) {
+				currentColor = Color(255,0,0);
 			}
 		}
 
@@ -121,6 +127,5 @@ class SDLApp{
 		// Otherwise the program refreshes too quickly
 		SDL_Delay(16);
 	}
-    }				
- 		
-}
+    }
+	}

@@ -4,6 +4,8 @@ import std.string;
 // Load the SDL2 library
 import bindbc.sdl;
 
+import Color:Color;
+
 struct Surface{
 	SDL_Surface* imgSurface;
 	int width;
@@ -23,7 +25,7 @@ struct Surface{
   	// Update a pixel ...
   	// SomeFunction()
     /// Function for updating the pixels in a surface to a 'blue-ish' color.
-void UpdateSurfacePixel(int xPos, int yPos, ubyte r, ubyte g, ubyte b){
+void UpdateSurfacePixel(int xPos, int yPos, Color color){
 	if(xPos < 0 || yPos < 0 || xPos > width || yPos > height){
 		return;
 	}
@@ -36,11 +38,11 @@ void UpdateSurfacePixel(int xPos, int yPos, ubyte r, ubyte g, ubyte b){
 	// Retrieve the pixel arraay that we want to modify
 	ubyte* pixelArray = cast(ubyte*)imgSurface.pixels;
 	// Change the 'blue' component of the pixels
-	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+0] = b;
+	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+0] = color.b;
 	// Change the 'green' component of the pixels
-	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+1] = g;
+	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+1] = color.g;
 	// Change the 'red' component of the pixels
-	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+2] = r;
+	pixelArray[yPos*imgSurface.pitch + xPos*imgSurface.format.BytesPerPixel+2] = color.r;
 }
 
   	
@@ -58,4 +60,4 @@ void UpdateSurfacePixel(int xPos, int yPos, ubyte r, ubyte g, ubyte b){
 	return res;
 }
   	
-  }
+}
