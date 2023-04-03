@@ -16,7 +16,7 @@ void receiveThread(shared Socket socket) {
     scope(exit) s.close();
     while (true) {
         byte[1024] buffer;
-        uint nbytes = s.receive(buffer);
+        long nbytes = s.receive(buffer);
         // If server disconnected, exit thread
         if (nbytes <= 0) {
             writeln("Server disconnected");
@@ -58,10 +58,12 @@ void main(){
     spawn(&receiveThread, cast(shared) socket);
 	write(">");
     byte [] test;
+    byte [][] test2;
     test ~= 1;
     test ~= 2;
-    writeln(test);
-    auto dataBytes = test.dup;
+    test2 ~= test;
+    writeln(test2);
+    auto dataBytes = test2.dup;
     writeln(dataBytes);
     foreach(line; stdin.byLine){
 		// Send the packet of information

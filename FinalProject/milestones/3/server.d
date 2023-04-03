@@ -67,6 +67,7 @@ void main(){
                             c.send(buffer[0 .. got]);
                 }
             }
+			
 			// The listener is ready to read
 			// Client wants to connect so we accept here.
 			if(readSet.isSet(listener)){
