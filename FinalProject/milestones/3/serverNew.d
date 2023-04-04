@@ -77,6 +77,8 @@ void main(){
                         continue;
                     }                    
 					// Adding +1 to client index to match number of clients.
+                    // byte[][] received = cast(byte[][]) buffer;
+
 					writeln("client",idx+1,">",buffer[0 .. got]);
 					// Send whatever was 'got' from the client.
                     foreach(c;connectedClientsList)
