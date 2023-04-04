@@ -1,4 +1,4 @@
-module clitenNew;
+module clientNew;
 
 // @file chat/client.d
 //
