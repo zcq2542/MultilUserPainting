@@ -75,40 +75,43 @@ class SDLApp{
                                         SDL_WINDOW_SHOWN);
 		usableSurface = Surface(640,480);
 		currentColor = Color(32,128,255);
-        connectToServer("localhost", 50001);
 
- 	}
-    
- 	~this(){
-        SDL_DestroyWindow(window);
- 	}
-
-    void connectToServer(String IP, int portNum) {
-        writeln("Starting client...attempt to create socket");
+		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
         this.socket = new Socket(AddressFamily.INET, SocketType.STREAM);
     	// Socket needs an 'endpoint', so we determine where we
     	// are going to connect to.
     	// NOTE: It's possible the port number is in use if you are not
     	//       able to connect. Try another one.
-        socket.connect(new InternetAddress(IP, portNum));
-    	scope(exit) socket.close();
+        socket.connect(new InternetAddress("localhost", 50001));
+    	// scope(exit) socket.close();
     	writeln("Connected");
 
-        char[1024] buffer;
+        // char[1024] buffer;
         auto received = socket.receive(buffer);
 
         writeln("(Client connecting) ", buffer[0 .. received]);
-    }
+        // connectToServer("localhost", 50001);
 
-    void receiveThread(shared Socket socket) {
+ 	}
+    
+ 	~this(){
+        SDL_DestroyWindow(window);
+		socket.close();
+ 	}
+
+    // void connectToServer(string IP, int portNum) {
+
+    // }
+
+    void receiveThread() {
         // Loop to receive messages
         Socket s = cast(Socket) socket;
         scope(exit) s.close();
         // byte[] buffer = new byte[1024];
         // scope(exit) destroy(buffer);
         while (true) {
-            uint nbytes = s.receive(buffer);
+            long nbytes = s.receive(buffer);
             // If server disconnected, exit thread
             if (nbytes <= 0) {
                 writeln("Server disconnected");
@@ -116,17 +119,12 @@ class SDLApp{
             }
             // Print out the received message
             // writeln("Received message: ", buffer[0 ..nbytes]);
-            draw(buffer[0 ..nbytes], 4); // draw the array.
+           
+		    // draw(buffer[0 ..nbytes], 4); // draw the array.
 
-            // write(">");
-        }   
-
-        // Close the socket
-        s.close();
-    }
-
-    void draw(int[] array, int brushSize){
-        Color receivedColor = Color(array[0], array[1], array[2]);
+		int brushSize = 4;
+		int[] array = buffer[0 ..nbytes];
+		Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
 
         for(int i = 3; i < array.length - 1; i+=2){
 				int newX = array[i];
@@ -137,13 +135,33 @@ class SDLApp{
 					}
 				}
 		}
+
+            // write(">");
+        }   
+
+        // Close the socket
+        s.close();
     }
+
+    // void draw(int[] array, int brushSize){
+    //     Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
+
+    //     for(int i = 3; i < array.length - 1; i+=2){
+	// 			int newX = array[i];
+	// 			int newY = array[i+1];
+	// 			for(int w=-brushSize; w < brushSize; w++){
+	// 				for(int h=-brushSize; h < brushSize; h++){
+	// 					usableSurface.UpdateSurfacePixel(newX+w,newY+h,receivedColor);
+	// 				}
+	// 			}
+	// 	}
+    // }
 
  		
  	void MainApplicationLoop(){ 
 
     // thread to receive and draw 
-    spawn(&receiveThread, cast(shared) this.socket);
+    // spawn(&receiveThread);
 
     // Flag for determing if we are running the main application loop
 	bool runApplication = true;
@@ -153,6 +171,8 @@ class SDLApp{
 
 	int[] coordinates = new int[0];
 
+
+	int totalPoints = 0;
 	// Main application loop that will run until a quit event has occurred.
 	// This is the 'main graphics loop'
 	while(runApplication){
@@ -168,13 +188,18 @@ class SDLApp{
 			}
 			else if(e.type == SDL_MOUSEBUTTONDOWN){
 				drawing=true;
+				coordinates ~= -1;
 				coordinates ~= currentColor.r;
 				coordinates ~= currentColor.g;
 				coordinates ~= currentColor.b;
+
 			}else if(e.type == SDL_MOUSEBUTTONUP){
 				drawing=false;
 				// writeln(coordinates); // Send to server
+				coordinates[0] = totalPoints;
+				writeln(coordinates);
                 this.socket.send(coordinates);
+				totalPoints = 0;
  				coordinates.length = 0;
 			}else if(e.type == SDL_MOUSEMOTION && drawing){
 				// retrieve the position
@@ -186,6 +211,7 @@ class SDLApp{
 				int brushSize=4;
 				coordinates ~= xPos;
 				coordinates ~= yPos;
+				totalPoints +=1;
 				for(int w=-brushSize; w < brushSize; w++){
 					for(int h=-brushSize; h < brushSize; h++){
 						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);

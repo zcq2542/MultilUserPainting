@@ -37,8 +37,8 @@ void main(){
     Socket[] connectedClientsList;
 
     // Message buffer will be 1024 bytes 
-    byte[1024] buffer;
-	byte[1024][1024] buffer3; 
+    int[10240] buffer;
+	// byte[1024][1024] buffer3; 
     // byte[Packet.sizeof] buffer2;
 
     // Main application loop for the server
@@ -65,7 +65,9 @@ void main(){
 					// When the message is received, then
 					// we send that message from the 
 					// server to the client
-                    auto got = client.receive(buffer3);
+                    client.receive(buffer);
+					auto got = buffer[0];
+					writeln(got);
                     if (got <= 0) {
                         // client.close();
                         //connectedClientsList = connectedClientsList.filter(c => c !is client).array;
@@ -79,11 +81,11 @@ void main(){
 					// Adding +1 to client index to match number of clients.
                     // byte[][] received = cast(byte[][]) buffer;
 
-					writeln("client",idx+1,">",buffer[0 .. got]);
+					writeln("client",idx+1,">",buffer[0 .. got*2 + 4]);
 					// Send whatever was 'got' from the client.
                     foreach(c;connectedClientsList)
                         if (c != client)
-                            c.send(buffer3[0 .. got]);
+                            c.send(buffer[0 .. got]);
                 }
             }
 			// The listener is ready to read
