@@ -5,6 +5,7 @@ import std.string;
 import std.socket;
 import std.conv;
 import std.concurrency;
+import std.array;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -13,7 +14,6 @@ import loader = bindbc.loader.sharedlib;
 import Surface:Surface;
 
 import Color:Color;
-
 const SDLSupport ret;
 
 shared static this() {
@@ -49,6 +49,8 @@ shared static this() {
     if(SDL_Init(SDL_INIT_EVERYTHING) !=0){
         writeln("SDL_Init: ", fromStringz(SDL_GetError()));
     }
+	
+
 }
 
 shared static ~this(){
@@ -57,12 +59,11 @@ shared static ~this(){
 }
 
 class SDLApp{
-    SDL_Window* window;
-    Surface usableSurface;
+    char[] buffer = new int[1024];
+    static SDL_Window* window;
     Color currentColor;
-    Socket socket;
-    int[] buffer = new int[1024];
-
+    __gshared  Socket socket;
+    __gshared  Surface usableSurface;
 
     this(){
 	 	// Handle initialization...
@@ -73,8 +74,8 @@ class SDLApp{
                                         640,
                                         480, 
                                         SDL_WINDOW_SHOWN);
-		usableSurface = Surface(640,480);
 		currentColor = Color(32,128,255);
+        usableSurface = Surface(640,480);
 
 		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
@@ -89,7 +90,6 @@ class SDLApp{
 
         // char[1024] buffer;
         auto received = socket.receive(buffer);
-
         writeln("(Client connecting) ", buffer[0 .. received]);
         // connectToServer("localhost", 50001);
 
@@ -103,15 +103,18 @@ class SDLApp{
     // void connectToServer(string IP, int portNum) {
 
     // }
-
-    void receiveThread() {
+    static void testThread() {
+        writeln("11test thread");
+    }
+    static void receiveThread() {
         // Loop to receive messages
-        Socket s = cast(Socket) socket;
-        scope(exit) s.close();
-        // byte[] buffer = new byte[1024];
+        // Socket s = this.socket;
+        //scope(exit) s.close();
+        int[1024] buffer;
+        // long n = this.socket.receive(buffer2);
         // scope(exit) destroy(buffer);
         while (true) {
-            long nbytes = s.receive(buffer);
+            long nbytes = socket.receive(buffer);
             // If server disconnected, exit thread
             if (nbytes <= 0) {
                 writeln("Server disconnected");
@@ -120,27 +123,36 @@ class SDLApp{
             // Print out the received message
             // writeln("Received message: ", buffer[0 ..nbytes]);
            
-		    // draw(buffer[0 ..nbytes], 4); // draw the array.
+		// draw(buffer[0 ..nbytes], 4); // draw the array.
 
-		int brushSize = 4;
-		int[] array = buffer[0 ..nbytes];
-		Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
+		    int brushSize = 4;
+            int got = buffer[0];
+		    int[] array = buffer[1 .. got*2 + 4];
+            writeln("array:", array);
+            // int [] array = [255, 0, 0, 153, 244, 155, 255, 156, 266];
+		    Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
 
-        for(int i = 3; i < array.length - 1; i+=2){
+            for(int i = 3; i < array.length - 1; i+=2){
 				int newX = array[i];
 				int newY = array[i+1];
 				for(int w=-brushSize; w < brushSize; w++){
 					for(int h=-brushSize; h < brushSize; h++){
 						usableSurface.UpdateSurfacePixel(newX+w,newY+h,receivedColor);
+                        // writeln("draw");
 					}
 				}
-		}
+                // ubyte[] col = this.usableSurface.getPixel(newX, newY);
+                // writeln("get");
+		    }
+		    SDL_BlitSurface(this.usableSurface.imgSurface,null,SDL_GetWindowSurface(this.window),null);
+		    // Update the window surface
+		    SDL_UpdateWindowSurface(this.window);
 
             // write(">");
-        }   
+       }   
 
         // Close the socket
-        s.close();
+        //s.close();
     }
 
     // void draw(int[] array, int brushSize){
@@ -161,7 +173,9 @@ class SDLApp{
  	void MainApplicationLoop(){ 
 
     // thread to receive and draw 
-    // spawn(&receiveThread);
+    auto t = spawn(&receiveThread);
+    // spawn(&testThread);
+    // t.join();
 
     // Flag for determing if we are running the main application loop
 	bool runApplication = true;
@@ -171,8 +185,9 @@ class SDLApp{
 
 	int[] coordinates = new int[0];
 
-
-	int totalPoints = 0;
+    writeln(this.usableSurface.getPixel(153, 244));
+	
+    int totalPoints = 0;
 	// Main application loop that will run until a quit event has occurred.
 	// This is the 'main graphics loop'
 	while(runApplication){
@@ -185,6 +200,8 @@ class SDLApp{
 		while(SDL_PollEvent(&e) !=0){
 			if(e.type == SDL_QUIT){
 				runApplication= false;
+                // send(t.id, "terminate"); // ask receiveThread to stop.
+                // t.terminate;
 			}
 			else if(e.type == SDL_MOUSEBUTTONDOWN){
 				drawing=true;
@@ -239,10 +256,10 @@ class SDLApp{
 
 		// Blit the surace (i.e. update the window with another surfaces pixels
 		//                       by copying those pixels onto the window).
+		// Delay for 16 milliseconds
 		SDL_BlitSurface(usableSurface.imgSurface,null,SDL_GetWindowSurface(window),null);
 		// Update the window surface
 		SDL_UpdateWindowSurface(window);
-		// Delay for 16 milliseconds
 		// Otherwise the program refreshes too quickly
 		SDL_Delay(16);
 	}
