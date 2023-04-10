@@ -65,10 +65,11 @@ void main(){
 					// When the message is received, then
 					// we send that message from the 
 					// server to the client
-                    client.receive(buffer);
+                    long receivedL = client.receive(buffer);
+                    writeln(receivedL);
 					auto got = buffer[0];
 					writeln(got);
-                    if (got <= 0) {
+                    if (receivedL <= 0) {
                         // client.close();
                         //connectedClientsList = connectedClientsList.filter(c => c !is client).array;
                         // break;
@@ -85,7 +86,7 @@ void main(){
 					// Send whatever was 'got' from the client.
                     foreach(c;connectedClientsList)
                         if (c != client)
-                            c.send(buffer[0 .. got]);
+                            c.send(buffer[0 .. got*2 + 4]);
                 }
             }
 			// The listener is ready to read
