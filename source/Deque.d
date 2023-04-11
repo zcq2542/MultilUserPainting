@@ -6,6 +6,8 @@
 import std.stdio;
 import std.exception;
 import core.exception : AssertError;
+import Node:Node;
+
 
 /*
     The following is an interface for a Deque data structure.
@@ -37,31 +39,13 @@ interface Container(T){
     // Retrieve number of elements currently in container
     size_t size();
 }
-class Node(T){
-	  T val;
-	  Node!(T) next;
-    Node!(T) prev;
 
-	  this(T val) {
-		  this.val = val;   
-		  this.next = null;
-      this.prev = null;
-    } 
-    this() {
-      // this.val;
-      this.next = null;
-      this.prev = null;
-    }
-
-    // ~this(){
-    //     this.next = null;
-    //     this.prev = null;   
-    // }
-}
 /*
     A Deque is a double-ended queue in which we can push and
     pop elements.
-    
+    frontPointer     Node            backPointer
+    | | -----------> | | ----------> | |
+    | | <----------- | | <---------- | |
     Note: Remember we could implement Deque as either a class or
           a struct depending on how we want to extend or use it.
           Either is fine for this assignment.
