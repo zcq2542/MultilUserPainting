@@ -18,13 +18,31 @@ class CommandHistory : Deque!(int[]){
         // destroy(this.historyArray);
     }
 
+    /** 
+     * add new command to command history deque.
+     * Params:
+     *   command = command to be add.
+     */
     public void add(int[] command) {
+        if (this.backPointer.prev != this.frontPointer && this.pointerCur.next != this.backPointer) { // there are nodes between backPointer and curent pointed node
+            this.backPointer.prev.next = null; // break connect form last node to the backPointer node.
+            // writeln("current pointed", pointerCur.val);
+            // writeln("current next pointed", pointerCur.next is null);
+            pointerCur.next.prev = null; // break connect form next node to current pointed node.
+        }
+        
         pointerCur.next = this.backPointer;
-        this.backPointer.prev = pointerCur;
+        this.backPointer.prev = pointerCur; // move backPointer to the next of current pointed node.
+
         this.push_back(command);
         pointerCur = pointerCur.next;
+        // writeln(pointerCur.val);
     }
 
+    /** 
+     * redo last undo command.
+     * Returns: an int array
+     */
     public int[] redo() {
         // if (pointerCur == this.backPointer.prev) return new int[]();
         assert(pointerCur != this.backPointer.prev);
@@ -35,6 +53,10 @@ class CommandHistory : Deque!(int[]){
         return res;
     }
 
+    /** 
+     * undo last command.
+     * Returns: an int array.
+     */
     public int[] undo() {
         // if (pointerCur == this.frontPointer) return new int[]();
         assert(pointerCur != this.frontPointer);
@@ -103,3 +125,26 @@ unittest
 //     writeln(ch.redo());
 //     // assert(ch.redo() == [1,2,3]);
 // }
+unittest
+{
+    auto ch = new CommandHistory();
+    ch.add([1, 2]);
+    ch.add([1,2,3]);
+    writeln(ch.undo());
+    // assert(ch.undo() == [1,2,3]);
+    writeln(ch.undo());
+    // assert(ch.undo() == [1, 2]);
+    ch.add([4]);
+    ch.add([5]);
+    writeln(ch.undo()); // [5]
+    ch.add([6]);
+    writeln(ch.undo()); // [6]
+    writeln(ch.undo()); // [4]
+    writeln(ch.redo()); // [4]
+    // assert(ch.redo() == [1, 2]);
+    writeln(ch.redo()); // [6]
+    // int[] res = [1,2,3];
+    // assert(ch.redo()[0] == res[0]);
+    // assert(ch.redo()[1] == res[1]);
+    // assert(ch.redo()[2] == res[2]);
+}
