@@ -67,19 +67,25 @@ void main(){
 					// server to the client
                     long receivedL = client.receive(buffer);
                     writeln(receivedL);
-					auto got = buffer[0];
-					writeln(got);
-                    if (receivedL <= 0) {
+                    if (receivedL <= 1) {
                         // client.close();
                         //connectedClientsList = connectedClientsList.filter(c => c !is client).array;
                         // break;
                         // writeln("got <= 0");
+                        writeln("end connect");
+                        client.send([1]);
+                        // writeln("sent end");
                         readSet.remove(client);
                         connectedClientsList = remove(connectedClientsList, idx);
+                        // Adding +1 to client index to match number of clients.
                         writeln("client", idx+1, "disconnect");
                         continue;
                     }                    
-					// Adding +1 to client index to match number of clients.
+					
+                    auto got = buffer[0];
+					writeln("length = ", got);
+                    // char[] message = cast(char[])buffer[0 .. receivedL];
+                    // writeln(message);
                     // byte[][] received = cast(byte[][]) buffer;
 
 					writeln("client",idx+1,">",buffer[0 .. got*2 + 4]);
