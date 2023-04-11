@@ -303,7 +303,7 @@ class SDLApp{
                             cmd[2] = 0;
                             cmd[3] = 0;
                             draw(cmd[1 .. $], 4);
-                            writeln("undo");
+                            // writeln("undo");
                         }
                         catch (Exception e) {
                             writeln(e.msg);
