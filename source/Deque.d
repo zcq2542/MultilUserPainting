@@ -233,9 +233,9 @@ unittest{
     destroy(myDeque);
 }
 
-void main(){
+// void main(){
     // No need for a 'main', use the unit test feature.
     // Note: The D Compiler can generate a 'main' for us automatically
     //       if we are just unit testing, and we'll look at that feature
     //       later on in the course.	
-}
+// }

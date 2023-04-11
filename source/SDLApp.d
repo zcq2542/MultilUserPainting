@@ -90,14 +90,19 @@ class SDLApp{
     	// are going to connect to.
     	// NOTE: It's possible the port number is in use if you are not
     	//       able to connect. Try another one.
-        socket.connect(new InternetAddress("localhost", 50001));
-    	// scope(exit) socket.close();
-    	writeln("Connected");
+        try {
+            socket.connect(new InternetAddress("localhost", 50001));
+            // scope(exit) socket.close();
+            writeln("Connected");
 
-        // char[1024] buffer;
-        auto received = socket.receive(buffer);
-        writeln("(Client connecting) ", buffer[0 .. received]);
-        // connectToServer("localhost", 50001);
+            // char[1024] buffer;
+            auto received = socket.receive(buffer);
+            writeln("(Client connecting) ", buffer[0 .. received]);
+            // connectToServer("localhost", 50001);
+        }
+        catch (Exception e) {
+            writeln(e.msg);
+        }
 
  	}
     
@@ -200,6 +205,9 @@ class SDLApp{
 	    //                                                but not yet released)
 	    bool drawing = false;
 
+        bool ctrlZPressed = false;
+        bool ctrlYPressed = false;
+
 	    int[] coordinates = new int[0];
 
         writeln(this.usableSurface.getPixel(153, 244));
@@ -284,27 +292,45 @@ class SDLApp{
 	    			}
 	    			}
 	    		} */
-                else if (e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL) {
+                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
                     if (socket.isAlive()) {
                         socket.send([-1, -1]); // send undo message to server.
                     }
                     else {
-                        int[] cmd = localCommandHistory.undo();
-                        cmd[1] = 0;
-                        cmd[2] = 0;
-                        cmd[3] = 0;
-                        draw(cmd[1 .. $], 4);
+                        try {
+                            int[] cmd = localCommandHistory.undo();
+                            cmd[1] = 0;
+                            cmd[2] = 0;
+                            cmd[3] = 0;
+                            draw(cmd[1 .. $], 4);
+                            writeln("undo");
+                        }
+                        catch (Exception e) {
+                            writeln(e.msg);
+                        }
                     }
+                    ctrlZPressed = true;
                 }
-
-                else if (e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL) {
+                else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL) {
+                   ctrlZPressed = false; 
+                }
+                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
                     if (socket.isAlive()) {
                         socket.send([1, 1]); // send redo message to server.
                     }
                     else {
-                        int[] cmd = localCommandHistory.redo();
-                        draw(cmd[1 .. $], 4);
+                        try {
+                            int[] cmd = localCommandHistory.redo();
+                            draw(cmd[1 .. $], 4);
+                        }
+                        catch (Exception e) {
+                            writeln(e.msg);
+                        }
                     }
+                    ctrlYPressed = true;
+                }
+                else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL) {
+                   ctrlYPressed = false; 
                 }
 	    	}
 
@@ -315,7 +341,7 @@ class SDLApp{
 	    	// Update the window surface
 	    	SDL_UpdateWindowSurface(window);
 	    	// Otherwise the program refreshes too quickly
-	    	SDL_Delay(16);
+	    	SDL_Delay(100);
 	    }
     }
 }
