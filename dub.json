@@ -19,7 +19,8 @@
 				"source/app.d"
 			],
 			"dependencies": {
-				"unit-threaded": "~>2.1.2"
+				"unit-threaded": "~>2.1.2",
+				"gtk-d": "~>3.10.0"
 			}
 		}
 	],
