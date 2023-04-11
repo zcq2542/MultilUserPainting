@@ -44,8 +44,8 @@ class CommandHistory : Deque!(int[]){
      * Returns: an int array
      */
     public int[] redo() {
-        // if (pointerCur == this.backPointer.prev) return new int[]();
-        assert(pointerCur != this.backPointer.prev);
+        if (pointerCur == this.backPointer.prev) throw new Exception("no command to redo");
+        // assert(pointerCur != this.backPointer.prev);
 
         int[] res = new int[](0);
         res ~= pointerCur.next.val;
@@ -58,8 +58,8 @@ class CommandHistory : Deque!(int[]){
      * Returns: an int array.
      */
     public int[] undo() {
-        // if (pointerCur == this.frontPointer) return new int[]();
-        assert(pointerCur != this.frontPointer);
+        if (pointerCur == this.frontPointer) throw new Exception("no command to undo");
+        // assert(pointerCur != this.frontPointer);
         int[] res = new int[](0);
         res ~= pointerCur.val;
         pointerCur = pointerCur.prev;
