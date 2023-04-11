@@ -6,6 +6,7 @@ import std.socket;
 import std.conv;
 import std.concurrency;
 import std.array;
+import core.thread;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -14,7 +15,10 @@ import loader = bindbc.loader.sharedlib;
 import Surface:Surface;
 
 import Color:Color;
+
 const SDLSupport ret;
+
+shared bool end = false;
 
 shared static this() {
 	version(Windows){
@@ -103,9 +107,11 @@ class SDLApp{
     // void connectToServer(string IP, int portNum) {
 
     // }
+    
     static void testThread() {
         writeln("11test thread");
     }
+
     static void receiveThread() {
         // Loop to receive messages
         // Socket s = this.socket;
@@ -114,9 +120,17 @@ class SDLApp{
         // long n = this.socket.receive(buffer2);
         // scope(exit) destroy(buffer);
         while (true) {
+            synchronized{ // not work. intend to use this to end thread.
+                writeln("end: ", end);
+                if (end) {
+                    writeln("end:", end);
+                    break; 
+                }
+            }
             long nbytes = socket.receive(buffer);
+            writeln("received nbytes: ", nbytes);
             // If server disconnected, exit thread
-            if (nbytes <= 0) {
+            if (nbytes <= 1) {
                 writeln("Server disconnected");
                 break;
             }
@@ -124,7 +138,7 @@ class SDLApp{
             // writeln("Received message: ", buffer[0 ..nbytes]);
            
 		// draw(buffer[0 ..nbytes], 4); // draw the array.
-
+            char[] rec = cast(char[])buffer[0 .. nbytes];
 		    int brushSize = 4;
             int got = buffer[0];
 		    int[] array = buffer[1 .. got*2 + 4];
@@ -152,7 +166,8 @@ class SDLApp{
        }   
 
         // Close the socket
-        //s.close();
+        if (socket) socket.close();
+        writeln("receive thread end");
     }
 
     // void draw(int[] array, int brushSize){
@@ -199,7 +214,21 @@ class SDLApp{
 		// are '0' events or a NULL event is returned.
 		while(SDL_PollEvent(&e) !=0){
 			if(e.type == SDL_QUIT){
-				runApplication= false;
+                synchronized{
+                    end = true;
+                    writeln("main end:", end);
+                }
+                // t.thread_term();
+                ubyte[] emptyMsg = [1];
+                long bytesSent = socket.send(emptyMsg);
+                // long bytesSent = socket.send([1]);
+                writeln("Sent ", bytesSent, " bytes");
+                // socket.close();
+                writeln("waiting all thread finish");
+                // thread_suspendAll();
+                // thread_term();
+                thread_joinAll();
+                runApplication= false;
                 // send(t.id, "terminate"); // ask receiveThread to stop.
                 // t.terminate;
 			}
