@@ -209,7 +209,6 @@ class SDLApp{
 
 static void QuitApp(){
 	writeln("Terminating application");
-
 	Main.quit();
 }
 
@@ -336,7 +335,8 @@ static void RunGUI(immutable string[] args)
 	    	while(SDL_PollEvent(&e) !=0){
 	    		if(e.type == SDL_QUIT){
                     synchronized{
-                        end = true;
+    					QuitApp();
+                    end = true;
                         writeln("main end:", end);
                     }
                     // t.thread_term();
