@@ -85,7 +85,8 @@ class ServerApp {
                             // break;
                             // writeln("got <= 0");
                             writeln("end connect");
-                            client.send([1]);
+                            ubyte[] endMessage = [3]; // 1 byte length message.
+                            client.send(endMessage);
                             // writeln("sent end");
                             readSet.remove(client);
                             connectedClientsList = remove(connectedClientsList, idx);
@@ -98,6 +99,7 @@ class ServerApp {
                                 try {
                                     writeln("undo");
                                     int[] undoCommand = commandHistory.undo();
+                                    undoCommand[0] = -1; // mark this command type as undo.
                                     undoCommand[1] = 0;
                                     undoCommand[2] = 0;
                                     undoCommand[3] = 0;
@@ -113,8 +115,10 @@ class ServerApp {
                             else {
                                 try {
                                     writeln("redo");
+                                    int[] redoCommand = commandHistory.redo();
+                                    redoCommand[0] = 1; // mark command type as redo;
                                     foreach(c;connectedClientsList)
-                                        c.send(commandHistory.redo());
+                                        c.send(redoCommand);
                                 }
                                 catch(Exception e) {
                                     writeln(e.msg);
@@ -127,8 +131,13 @@ class ServerApp {
                             // char[] message = cast(char[])buffer[0 .. receivedL];
                             // writeln(message);
                             // byte[][] received = cast(byte[][]) buffer;
-                            int[]receivedCommand = new int[got*2 + 4];
-                            receivedCommand[] = buffer[0 .. got*2 + 4];
+                            writeln(receivedL/4);
+                            // int[]receivedCommand = new int[got*2 + 4];
+                            // receivedCommand[] = buffer[0 .. got*2 + 4];
+                            int intL = cast(int)receivedL/4;
+                            writeln("intL: ", intL);
+                            int[]receivedCommand = new int[intL];
+                            receivedCommand[] = buffer[0 .. intL];
                             writeln("client",idx+1,">", receivedCommand);
                             // Send whatever was 'got' from the client.
                             commandHistory.add(receivedCommand);
