@@ -63,12 +63,13 @@ shared static ~this(){
 }
 
 class SDLApp{
-    char[] buffer = new int[1024];
+    int[] buffer = new int[1024];
     static SDL_Window* window;
     Color currentColor;
     __gshared  Socket socket;
     __gshared  Surface usableSurface;
-    CommandHistory localCommandHistory;
+    __gshared CommandHistory localCommandHistory;
+    __gshared int ClientId;
 
     this(){
 	 	// Handle initialization...
@@ -96,8 +97,12 @@ class SDLApp{
             writeln("Connected");
 
             // char[1024] buffer;
+            // auto received = socket.receive(buffer);
+            // writeln("(Client connecting) ", buffer[0 .. received]);
             auto received = socket.receive(buffer);
-            writeln("(Client connecting) ", buffer[0 .. received]);
+            // writeln("rece: ", received);
+            this.ClientId = (cast(int[])buffer[0 .. 4])[0];
+            writeln("ClientId: ", this.ClientId);
             // connectToServer("localhost", 50001);
         }
         catch (Exception e) {
@@ -123,7 +128,7 @@ class SDLApp{
         // Loop to receive messages
         // Socket s = this.socket;
         //scope(exit) s.close();
-        int[1024] buffer;
+        int[10240] buffer;
         // long n = this.socket.receive(buffer2);
         // scope(exit) destroy(buffer);
         while (true) {
@@ -145,11 +150,16 @@ class SDLApp{
             // writeln("Received message: ", buffer[0 ..nbytes]);
            
 		// draw(buffer[0 ..nbytes], 4); // draw the array.
-            char[] rec = cast(char[])buffer[0 .. nbytes];
+            // char[] rec = cast(char[])buffer[0 .. nbytes];
 		    int brushSize = 4;
             int got = buffer[0];
 		    int[] array = buffer[1 .. got*2 + 4];
+            //int[] array = buffer[1 .. nbytes/4];
             writeln("array:", array);
+            int[] cmd = new int[got*2 + 4];
+            cmd[] = buffer[0 .. got*2+4];
+            writeln("copy ok");
+            localCommandHistory.add(cmd);
             // int [] array = [255, 0, 0, 153, 244, 155, 255, 156, 266];
 		    Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
 
@@ -294,7 +304,7 @@ class SDLApp{
 	    		} */
                 else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
                     if (socket.isAlive()) {
-                        socket.send([-1, -1]); // send undo message to server.
+                        socket.send([-1]); // send undo message to server.
                     }
                     else {
                         try {
@@ -316,7 +326,7 @@ class SDLApp{
                 }
                 else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
                     if (socket.isAlive()) {
-                        socket.send([1, 1]); // send redo message to server.
+                        socket.send([1]); // send redo message to server.
                     }
                     else {
                         try {
