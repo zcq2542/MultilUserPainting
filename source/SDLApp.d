@@ -7,6 +7,16 @@ import std.conv;
 import std.concurrency;
 import std.array;
 import core.thread;
+import gtk.MainWindow;
+import gtk.Main;
+import gtk.Widget;
+import gtk.Button;
+import gdk.Event;
+import gtk.CssProvider;
+import gdk.Display;
+import gdk.Screen;
+import gtk.StyleContext;
+import gtk.Box;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -65,11 +75,12 @@ shared static ~this(){
 class SDLApp{
     char[] buffer = new int[1024];
     static SDL_Window* window;
-    Color currentColor;
+    __gshared  Color currentColor;
     __gshared  Socket socket;
     __gshared  Surface usableSurface;
+	string[] args;
 
-    this(){
+    this(string[] args){
 	 	// Handle initialization...
  		// SDL_Init
         window = SDL_CreateWindow("D SDL Painting",
@@ -80,10 +91,11 @@ class SDLApp{
                                         SDL_WINDOW_SHOWN);
 		currentColor = Color(32,128,255);
         usableSurface = Surface(640,480);
+		this.args = args;
 
 		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
-        this.socket = new Socket(AddressFamily.INET, SocketType.STREAM);
+        this.socket = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
     	// Socket needs an 'endpoint', so we determine where we
     	// are going to connect to.
     	// NOTE: It's possible the port number is in use if you are not
@@ -170,25 +182,106 @@ class SDLApp{
         writeln("receive thread end");
     }
 
-    // void draw(int[] array, int brushSize){
-    //     Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
+static void QuitApp(){
+	writeln("Terminating application");
 
-    //     for(int i = 3; i < array.length - 1; i+=2){
-	// 			int newX = array[i];
-	// 			int newY = array[i+1];
-	// 			for(int w=-brushSize; w < brushSize; w++){
-	// 				for(int h=-brushSize; h < brushSize; h++){
-	// 					usableSurface.UpdateSurfacePixel(newX+w,newY+h,receivedColor);
-	// 				}
-	// 			}
-	// 	}
-    // }
+	Main.quit();
+}
+
+struct Data {
+	Color color;
+	string text;
+
+	this(Color color, string text){
+		this.color = color;
+		this.text = text;
+	}
+}
+
+static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
+	Button myButton = new Button("");
+	myButton.setName(text);
+
+	// Action for when we click a button
+	myButton.addOnClicked(delegate void(Button bt) {
+							currentColor = Color(r,g,b);
+						});
+
+	hbox.packStart(myButton, true, true, 0);
+}
+
+static void RunGUI(immutable string[] args)
+{
+	string[] args2 = args.dup;
+
+	string cssPath = "source/button.css";
+
+    CssProvider provider = new CssProvider();
+    provider.loadFromPath(cssPath);
+
+	// Initialize GTK
+	Main.init(args2);
+	// Setup our window
+	MainWindow myWindow = new MainWindow("Colors");
+	// Position our window
+	myWindow.setDefaultSize(0,0);
+	int w,h;
+	myWindow.getSize(w,h);
+	writeln("width   : ",w);
+	writeln("height  : ",h);
+	myWindow.move(100,120);
+	
+	// Delegate to call when we destroy our application
+	myWindow.addOnDestroy(delegate void(Widget w) { QuitApp(); });
+
+	 auto vbox = new Box(Orientation.VERTICAL, 0);
+
+	 Data[] allColors = new Data[0];
+	 allColors ~= Data(Color(255,0,0), "redbutton");
+	 allColors ~= Data(Color(0,255,0), "greenbutton");
+	 allColors ~= Data(Color(32,128,255), "bluebutton");
+	 allColors ~= Data(Color(255,255,255), "whitebutton");
+	 allColors ~= Data(Color(180,180,180), "greybutton");
+	 allColors ~= Data(Color(255,194,14), "yellowbutton");
+	 allColors ~= Data(Color(111,49,152), "purplebutton");
+	 allColors ~= Data(Color(153,217,234), "skybutton");
+	 allColors ~= Data(Color(181,165,213), "lightpurpbutton");
+	 allColors ~= Data(Color(153,0,48), "maroonbutton");
+
+	 int numOfCol = 5;
+	 auto numOfRows = 2;
+
+		for(int i = 0; i < numOfRows; i++){
+			auto hbox = new Box(Orientation.HORIZONTAL, 0);
+			for(int j = 0; j < numOfCol; j++){
+						createButton(allColors[i*numOfCol + j].color.r, allColors[i*numOfCol + j].color.g, allColors[i*numOfCol + j].color.b, allColors[i*numOfCol + j].text, hbox );
+			}
+			vbox.add(hbox);
+	}
+
+	Display display = Display.getDefault();
+    Screen screen = display.getDefaultScreen();
+    StyleContext.addProviderForScreen(screen, provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+
+	// Add our button as a child of our window
+	myWindow.add(vbox);
+
+	// Show our window
+	myWindow.showAll();
+
+	// Run our main loop
+	Main.run();
+}
+
 
  		
  	void MainApplicationLoop(){ 
 
     // thread to receive and draw 
     auto t = spawn(&receiveThread);
+	immutable string[] args2 = this.args.dup;
+	spawn(&RunGUI,args2);
     // spawn(&testThread);
     // t.join();
 
@@ -263,24 +356,7 @@ class SDLApp{
 						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
 					}
 				}
-			}else if(e.key.keysym.sym == SDLK_r) {
-				currentColor = Color(255,0,0);
-			} 
-			/*else if(e.key.keysym.sym ==SDLK_t){
-				int[] test = [255, 0, 0, 193, 277, 190, 266, 186, 255, 182, 241, 178, 227, 174, 212, 170, 197, 167, 186, 163, 177, 161, 169, 158, 163, 156, 157, 152, 153, 149, 150, 146, 147, 142, 144, 140, 142, 136, 142, 134, 141, 131, 141, 129, 141, 127, 141, 125, 142, 123, 143, 120, 146, 118, 149, 115, 154, 113, 157, 112, 161, 111, 164, 110, 166, 109, 168, 109, 170, 108, 171, 110, 169, 111, 165, 111, 158, 111, 152, 111, 146, 110, 141, 109, 135, 108, 130, 107, 127, 106, 123, 106, 121, 105, 121, 105, 120, 105, 122, 105, 125, 105, 127, 105, 130, 106, 131, 106, 133, 107, 134, 107, 135, 108, 135, 108, 136, 109, 136, 110, 136, 110, 137, 112, 137, 113, 138, 115, 139, 117, 140, 119, 141, 121, 142, 122, 143, 124, 146, 126, 148, 126, 149, 127, 151, 127, 152, 127, 154, 128, 155, 128, 156, 127, 156, 127, 157, 127, 159, 126, 161, 126, 162, 125, 163, 124, 165, 122, 167, 119, 169, 117, 171, 114, 174, 112, 177, 109, 179, 106, 183, 104, 186, 102, 190, 99, 194, 97, 199, 97, 203, 95, 209, 93, 214, 92, 221, 91, 226, 90, 231, 89, 235, 88, 238, 88, 240, 87, 242, 87, 243];
-
-				int brushSize = 4;
-
-				for(int i = 3; i < test.length - 1; i+=2){
-				int newX = test[i];
-				int newY = test[i+1];
-				for(int w=-brushSize; w < brushSize; w++){
-					for(int h=-brushSize; h < brushSize; h++){
-						usableSurface.UpdateSurfacePixel(newX+w,newY+h,currentColor);
-					}
-				}
-				}
-			} */
+			}
 		}
 
 		// Blit the surace (i.e. update the window with another surfaces pixels

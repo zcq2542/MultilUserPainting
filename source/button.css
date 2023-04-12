@@ -1,0 +1,59 @@
+#redbutton {
+    background-image: none;
+    background-color: red;
+    color: red;
+}
+
+#greenbutton {
+    background-image: none;
+    background-color: green;
+    color: green;
+}
+
+#bluebutton {
+    background-image: none;
+    background-color: rgb(32, 128, 255);
+    color: rgb(32, 128, 255);
+}
+
+#whitebutton {
+    background-image: none;
+    background-color: rgb(255, 255, 255);
+    color: rgb(255, 255, 255);
+}
+
+#greybutton {
+    background-image: none;
+    background-color: rgb(180, 180, 180);
+    color: rgb(180, 180, 180);
+}
+
+#yellowbutton {
+    background-image: none;
+    background-color: rgb(255, 194, 14);
+    color: rgb(255, 194, 14);
+}
+
+#purplebutton {
+    background-image: none;
+    background-color: rgb(111, 49, 152);
+    color: rgb(111, 49, 152);
+}
+
+#skybutton {
+    background-image: none;
+    background-color: rgb(153, 217, 234);
+    color: rgb(153, 217, 234);
+}
+
+#lightpurpbutton {
+    background-image: none;
+    background-color: rgb(181, 165, 213);
+    color: rgb(181, 165, 213);
+}
+
+#maroonbutton {
+    background-image: none;
+    background-color: rgb(153, 0, 48);
+    color: rgb(153, 0, 48);
+}
