@@ -81,7 +81,6 @@ class SDLApp{
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
 	string[] args;
-	string[] args;
 
     this(string[] args){
 	 	// Handle initialization...
