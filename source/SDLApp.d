@@ -152,14 +152,22 @@ class SDLApp{
 		// draw(buffer[0 ..nbytes], 4); // draw the array.
             // char[] rec = cast(char[])buffer[0 .. nbytes];
 		    int brushSize = 4;
-            int got = buffer[0];
-		    int[] array = buffer[1 .. got*2 + 4];
+            int type = buffer[0];
+            int intL = cast(int)nbytes/4;
+		    int[] array = buffer[1 .. intL];
             //int[] array = buffer[1 .. nbytes/4];
             writeln("array:", array);
-            int[] cmd = new int[got*2 + 4];
-            cmd[] = buffer[0 .. got*2+4];
+            int[] cmd = new int[intL];
+            cmd[] = buffer[0 .. intL];
             writeln("copy ok");
-            localCommandHistory.add(cmd);
+            if (type == 0)
+                localCommandHistory.add(cmd);
+            else if (type == -1)
+                localCommandHistory.undo();
+            else if (type == 1){
+                writeln("got here");
+                localCommandHistory.redo();
+            }
             // int [] array = [255, 0, 0, 153, 244, 155, 255, 156, 266];
 		    Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
 
@@ -262,8 +270,9 @@ class SDLApp{
 	    		}else if(e.type == SDL_MOUSEBUTTONUP){
 	    			drawing=false;
 	    			// writeln(coordinates); // Send to server
-	    			coordinates[0] = totalPoints;
-	    			writeln(coordinates);
+	    			// coordinates[0] = totalPoints;
+	    			coordinates[0] = 0; // mark command type as client draw.
+                    writeln(coordinates);
                     this.socket.send(coordinates);
                     this.localCommandHistory.add(coordinates);
 	    			totalPoints = 0;
