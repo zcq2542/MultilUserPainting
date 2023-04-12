@@ -9,6 +9,9 @@ import std.stdio;
 // import Packet : Packet;
 import std.algorithm;
 import std.array;
+import CommandHistory;
+
+
 
 // Entry point to Server
 void main(){
@@ -80,19 +83,38 @@ void main(){
                         // Adding +1 to client index to match number of clients.
                         writeln("client", idx+1, "disconnect");
                         continue;
+                    }
+                    if (receivedL == 4) { // receive an integer. (integer is 4 bytes)
+                        if (buffer[0] == -1){
+                            writeln("undo");
+                            foreach(c;connectedClientsList) {
+//                                int[] undoCommand = commandHistory.undo();
+//                                undoCommand[1] = 0;
+//                                undoCommand[2] = 0;
+//                                undoCommand[3] = 0;
+//                                c.send(undoCommand);
+                            }
+                        }
+                        else {
+                            writeln("redo");
+                            foreach(c;connectedClientsList)
+//                              c.send(commandHistory.redo());
+                        }    
                     }                    
-					
-                    auto got = buffer[0];
-					writeln("length = ", got);
-                    // char[] message = cast(char[])buffer[0 .. receivedL];
-                    // writeln(message);
-                    // byte[][] received = cast(byte[][]) buffer;
-
-					writeln("client",idx+1,">",buffer[0 .. got*2 + 4]);
-					// Send whatever was 'got' from the client.
-                    foreach(c;connectedClientsList)
-                        if (c != client)
-                            c.send(buffer[0 .. got*2 + 4]);
+                    else {
+                        auto got = buffer[0];
+                        writeln("length = ", got);
+                        // char[] message = cast(char[])buffer[0 .. receivedL];
+                        // writeln(message);
+                        // byte[][] received = cast(byte[][]) buffer;
+                        int[] receivedCommand = buffer[0 .. got*2 + 4];
+                        writeln("client",idx+1,">", receivedCommand);
+                        // Send whatever was 'got' from the client.
+//                        commandHistory.add(receivedCommand);
+                        foreach(c;connectedClientsList)
+                            if (c != client)
+                                c.send(receivedCommand);
+                    }
                 }
             }
 			// The listener is ready to read
