@@ -17,16 +17,6 @@ import gdk.Display;
 import gdk.Screen;
 import gtk.StyleContext;
 import gtk.Box;
-import gtk.MainWindow;
-import gtk.Main;
-import gtk.Widget;
-import gtk.Button;
-import gdk.Event;
-import gtk.CssProvider;
-import gdk.Display;
-import gdk.Screen;
-import gtk.StyleContext;
-import gtk.Box;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -105,7 +95,6 @@ class SDLApp{
 		currentColor = Color(32,128,255);
         usableSurface = Surface(640,480);
         localCommandHistory = new CommandHistory();
-		this.args = args;
 		this.args = args;
 
 		writeln("Starting client...attempt to create socket");
