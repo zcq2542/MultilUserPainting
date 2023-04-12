@@ -2,8 +2,8 @@
 import SDLApp:SDLApp;
 
 // Entry point to program
-void main()
+void main(string[] args)
 {
- 	SDLApp myApp = new SDLApp();
+ 	SDLApp myApp = new SDLApp(args);
   	myApp.MainApplicationLoop();
 }

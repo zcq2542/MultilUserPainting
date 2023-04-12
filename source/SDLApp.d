@@ -7,6 +7,16 @@ import std.conv;
 import std.concurrency;
 import std.array;
 import core.thread;
+import gtk.MainWindow;
+import gtk.Main;
+import gtk.Widget;
+import gtk.Button;
+import gdk.Event;
+import gtk.CssProvider;
+import gdk.Display;
+import gdk.Screen;
+import gtk.StyleContext;
+import gtk.Box;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -65,13 +75,14 @@ shared static ~this(){
 class SDLApp{
     int[] buffer = new int[1024];
     static SDL_Window* window;
-    Color currentColor;
+    __gshared  Color currentColor;
     __gshared  Socket socket;
     __gshared  Surface usableSurface;
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
+	string[] args;
 
-    this(){
+    this(string[] args){
 	 	// Handle initialization...
  		// SDL_Init
         window = SDL_CreateWindow("D SDL Painting",
@@ -83,10 +94,11 @@ class SDLApp{
 		currentColor = Color(32,128,255);
         usableSurface = Surface(640,480);
         localCommandHistory = new CommandHistory();
+		this.args = args;
 
 		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
-        this.socket = new Socket(AddressFamily.INET, SocketType.STREAM);
+        this.socket = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
     	// Socket needs an 'endpoint', so we determine where we
     	// are going to connect to.
     	// NOTE: It's possible the port number is in use if you are not
@@ -195,27 +207,108 @@ class SDLApp{
         writeln("receive thread end");
     }
 
-    void draw(int[] array, int brushSize){
-        Color receivedColor = Color(cast(ubyte) array[0],cast(ubyte) array[1],cast(ubyte) array[2]);
+static void QuitApp(){
+	writeln("Terminating application");
 
-        for(int i = 3; i < array.length - 1; i+=2){
-				int newX = array[i];
-				int newY = array[i+1];
-				for(int w=-brushSize; w < brushSize; w++){
-					for(int h=-brushSize; h < brushSize; h++){
-						usableSurface.UpdateSurfacePixel(newX+w,newY+h,receivedColor);
-					}
-				}
-		}
-    }
+	Main.quit();
+}
+
+struct Data {
+	Color color;
+	string text;
+
+	this(Color color, string text){
+		this.color = color;
+		this.text = text;
+	}
+}
+
+static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
+	Button myButton = new Button("");
+	myButton.setName(text);
+
+	// Action for when we click a button
+	myButton.addOnClicked(delegate void(Button bt) {
+							currentColor = Color(r,g,b);
+						});
+
+	hbox.packStart(myButton, true, true, 0);
+}
+
+static void RunGUI(immutable string[] args)
+{
+	string[] args2 = args.dup;
+
+	string cssPath = "source/button.css";
+
+    CssProvider provider = new CssProvider();
+    provider.loadFromPath(cssPath);
+
+	// Initialize GTK
+	Main.init(args2);
+	// Setup our window
+	MainWindow myWindow = new MainWindow("Colors");
+	// Position our window
+	myWindow.setDefaultSize(0,0);
+	int w,h;
+	myWindow.getSize(w,h);
+	writeln("width   : ",w);
+	writeln("height  : ",h);
+	myWindow.move(100,120);
+	
+	// Delegate to call when we destroy our application
+	myWindow.addOnDestroy(delegate void(Widget w) { QuitApp(); });
+
+	 auto vbox = new Box(Orientation.VERTICAL, 0);
+
+	 Data[] allColors = new Data[0];
+	 allColors ~= Data(Color(255,0,0), "redbutton");
+	 allColors ~= Data(Color(0,255,0), "greenbutton");
+	 allColors ~= Data(Color(32,128,255), "bluebutton");
+	 allColors ~= Data(Color(255,255,255), "whitebutton");
+	 allColors ~= Data(Color(180,180,180), "greybutton");
+	 allColors ~= Data(Color(255,194,14), "yellowbutton");
+	 allColors ~= Data(Color(111,49,152), "purplebutton");
+	 allColors ~= Data(Color(153,217,234), "skybutton");
+	 allColors ~= Data(Color(181,165,213), "lightpurpbutton");
+	 allColors ~= Data(Color(153,0,48), "maroonbutton");
+
+	 int numOfCol = 5;
+	 auto numOfRows = 2;
+
+		for(int i = 0; i < numOfRows; i++){
+			auto hbox = new Box(Orientation.HORIZONTAL, 0);
+			for(int j = 0; j < numOfCol; j++){
+						createButton(allColors[i*numOfCol + j].color.r, allColors[i*numOfCol + j].color.g, allColors[i*numOfCol + j].color.b, allColors[i*numOfCol + j].text, hbox );
+			}
+			vbox.add(hbox);
+	}
+
+	Display display = Display.getDefault();
+    Screen screen = display.getDefaultScreen();
+    StyleContext.addProviderForScreen(screen, provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+
+	// Add our button as a child of our window
+	myWindow.add(vbox);
+
+	// Show our window
+	myWindow.showAll();
+
+	// Run our main loop
+	Main.run();
+}
+
 
  		
     void MainApplicationLoop(){ 
 
-        // thread to receive and draw 
-        auto t = spawn(&receiveThread);
-        // spawn(&testThread);
-        // t.join();
+    // thread to receive and draw 
+    auto t = spawn(&receiveThread);
+	immutable string[] args2 = this.args.dup;
+	spawn(&RunGUI,args2);
+    // spawn(&testThread);
+    // t.join();
 
         // Flag for determing if we are running the main application loop
 	    bool runApplication = true;
