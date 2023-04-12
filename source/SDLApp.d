@@ -17,6 +17,16 @@ import gdk.Display;
 import gdk.Screen;
 import gtk.StyleContext;
 import gtk.Box;
+import gtk.MainWindow;
+import gtk.Main;
+import gtk.Widget;
+import gtk.Button;
+import gdk.Event;
+import gtk.CssProvider;
+import gdk.Display;
+import gdk.Screen;
+import gtk.StyleContext;
+import gtk.Box;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -81,6 +91,7 @@ class SDLApp{
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
 	string[] args;
+	string[] args;
 
     this(string[] args){
 	 	// Handle initialization...
@@ -94,6 +105,7 @@ class SDLApp{
 		currentColor = Color(32,128,255);
         usableSurface = Surface(640,480);
         localCommandHistory = new CommandHistory();
+		this.args = args;
 		this.args = args;
 
 		writeln("Starting client...attempt to create socket");
@@ -335,6 +347,7 @@ static void RunGUI(immutable string[] args)
 	    	while(SDL_PollEvent(&e) !=0){
 	    		if(e.type == SDL_QUIT){
                     synchronized{
+					QuitApp();
     					QuitApp();
                     end = true;
                         writeln("main end:", end);
@@ -360,91 +373,32 @@ static void RunGUI(immutable string[] args)
 	    			coordinates ~= currentColor.g;
 	    			coordinates ~= currentColor.b;
 
-	    		}else if(e.type == SDL_MOUSEBUTTONUP){
-	    			drawing=false;
-	    			// writeln(coordinates); // Send to server
-	    			// coordinates[0] = totalPoints;
-	    			coordinates[0] = 0; // mark command type as client draw.
-                    writeln(coordinates);
-                    this.socket.send(coordinates);
-                    this.localCommandHistory.add(coordinates);
-	    			totalPoints = 0;
- 	    			coordinates.length = 0;
-	    		}else if(e.type == SDL_MOUSEMOTION && drawing){
-	    			// retrieve the position
-	    			int xPos = e.button.x;
-	    			int yPos = e.button.y;
-	    			// Loop through and update specific pixels
-	    			// NOTE: No bounds checking performed --
-	    			//       think about how you might fix this :)
-	    			int brushSize=4;
-	    			coordinates ~= xPos;
-	    			coordinates ~= yPos;
-	    			totalPoints +=1;
-	    			for(int w=-brushSize; w < brushSize; w++){
-	    				for(int h=-brushSize; h < brushSize; h++){
-	    					usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
-	    				}
-	    			}
-	    		}else if(e.key.keysym.sym == SDLK_r) {
-	    			currentColor = Color(255,0,0);
-	    		} 
-	    		/*else if(e.key.keysym.sym ==SDLK_t){
-	    			int[] test = [255, 0, 0, 193, 277, 190, 266, 186, 255, 182, 241, 178, 227, 174, 212, 170, 197, 167, 186, 163, 177, 161, 169, 158, 163, 156, 157, 152, 153, 149, 150, 146, 147, 142, 144, 140, 142, 136, 142, 134, 141, 131, 141, 129, 141, 127, 141, 125, 142, 123, 143, 120, 146, 118, 149, 115, 154, 113, 157, 112, 161, 111, 164, 110, 166, 109, 168, 109, 170, 108, 171, 110, 169, 111, 165, 111, 158, 111, 152, 111, 146, 110, 141, 109, 135, 108, 130, 107, 127, 106, 123, 106, 121, 105, 121, 105, 120, 105, 122, 105, 125, 105, 127, 105, 130, 106, 131, 106, 133, 107, 134, 107, 135, 108, 135, 108, 136, 109, 136, 110, 136, 110, 137, 112, 137, 113, 138, 115, 139, 117, 140, 119, 141, 121, 142, 122, 143, 124, 146, 126, 148, 126, 149, 127, 151, 127, 152, 127, 154, 128, 155, 128, 156, 127, 156, 127, 157, 127, 159, 126, 161, 126, 162, 125, 163, 124, 165, 122, 167, 119, 169, 117, 171, 114, 174, 112, 177, 109, 179, 106, 183, 104, 186, 102, 190, 99, 194, 97, 199, 97, 203, 95, 209, 93, 214, 92, 221, 91, 226, 90, 231, 89, 235, 88, 238, 88, 240, 87, 242, 87, 243];
-
-	    			int brushSize = 4;
-
-	    			for(int i = 3; i < test.length - 1; i+=2){
-	    			int newX = test[i];
-	    			int newY = test[i+1];
-	    			for(int w=-brushSize; w < brushSize; w++){
-	    				for(int h=-brushSize; h < brushSize; h++){
-	    					usableSurface.UpdateSurfacePixel(newX+w,newY+h,currentColor);
-	    				}
-	    			}
-	    			}
-	    		} */
-                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
-                    if (socket.isAlive()) {
-                        socket.send([-1]); // send undo message to server.
-                    }
-                    else {
-                        try {
-                            int[] cmd = localCommandHistory.undo();
-                            cmd[1] = 0;
-                            cmd[2] = 0;
-                            cmd[3] = 0;
-                            draw(cmd[1 .. $], 4);
-                            // writeln("undo");
-                        }
-                        catch (Exception e) {
-                            writeln(e.msg);
-                        }
-                    }
-                    ctrlZPressed = true;
-                }
-                else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL) {
-                   ctrlZPressed = false; 
-                }
-                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
-                    if (socket.isAlive()) {
-                        socket.send([1]); // send redo message to server.
-                    }
-                    else {
-                        try {
-                            int[] cmd = localCommandHistory.redo();
-                            draw(cmd[1 .. $], 4);
-                        }
-                        catch (Exception e) {
-                            writeln(e.msg);
-                        }
-                    }
-                    ctrlYPressed = true;
-                }
-                else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL) {
-                   ctrlYPressed = false; 
-                }
-	    	}
+			}else if(e.type == SDL_MOUSEBUTTONUP){
+				drawing=false;
+				// writeln(coordinates); // Send to server
+				coordinates[0] = totalPoints;
+				writeln(coordinates);
+                this.socket.send(coordinates);
+				totalPoints = 0;
+ 				coordinates.length = 0;
+			}else if(e.type == SDL_MOUSEMOTION && drawing){
+				// retrieve the position
+				int xPos = e.button.x;
+				int yPos = e.button.y;
+				// Loop through and update specific pixels
+				// NOTE: No bounds checking performed --
+				//       think about how you might fix this :)
+				int brushSize=4;
+				coordinates ~= xPos;
+				coordinates ~= yPos;
+				totalPoints +=1;
+				for(int w=-brushSize; w < brushSize; w++){
+					for(int h=-brushSize; h < brushSize; h++){
+						usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
+					}
+				}
+			}
+		}
 
 	    	// Blit the surace (i.e. update the window with another surfaces pixels
 	    	//                       by copying those pixels onto the window).
