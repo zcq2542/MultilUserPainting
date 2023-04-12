@@ -14,4 +14,4 @@ finalproject-aurora-test-*
 *.o
 *.obj
 *.lst
-bin/
+bin/finalproject-aurora
