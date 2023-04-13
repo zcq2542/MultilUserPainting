@@ -8,14 +8,32 @@ import core.exception : AssertError;
 class CommandHistory : Deque!(int[]){
     // private Deque historyArray;
     private Node!(int[]) pointerCur;
-    
+    private int curPos;
     this() {
         super();
         pointerCur = this.frontPointer;
+        this.curPos = -1;
+
     }
 
     ~this() {
         // destroy(this.historyArray);
+    }
+    /**
+     * get the index of currentPointer. 
+     */ 
+    public int getCurPos() {
+        return curPos;
+    }
+
+    public void setCurPos(int Pos) {
+        Node!(int[]) temp = this.frontPointer;
+        int i = -1;
+        for (i = -1; i < Pos; ++i) {
+            temp = temp.next;
+        }
+        this.pointerCur = temp;
+        this.curPos = i;
     }
 
     /** 
@@ -36,6 +54,7 @@ class CommandHistory : Deque!(int[]){
 
         this.push_back(command);
         pointerCur = pointerCur.next;
+        ++curPos;
         // writeln(pointerCur.val);
     }
 
@@ -50,6 +69,7 @@ class CommandHistory : Deque!(int[]){
         int[] res = new int[](0);
         res ~= pointerCur.next.val;
         pointerCur = pointerCur.next;
+        ++curPos;
         return res;
     }
 
@@ -63,6 +83,7 @@ class CommandHistory : Deque!(int[]){
         int[] res = new int[](0);
         res ~= pointerCur.val;
         pointerCur = pointerCur.prev;
+        --curPos;
         return res;
     }
 }
@@ -147,4 +168,19 @@ unittest
     // assert(ch.redo()[0] == res[0]);
     // assert(ch.redo()[1] == res[1]);
     // assert(ch.redo()[2] == res[2]);
+}
+
+unittest
+{
+    auto ch = new CommandHistory();
+    ch.add([1, 2]);
+    ch.add([1,2,3]);
+    ch.add([4]);
+    ch.add([5]);
+    ch.add([6]);
+    writeln(ch.getCurPos());
+    ch.setCurPos(2);
+    writeln(ch.undo()); // [4]
+    writeln(ch.getCurPos()); // 1
+    
 }
