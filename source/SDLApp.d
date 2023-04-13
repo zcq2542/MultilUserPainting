@@ -302,12 +302,12 @@ static void RunGUI(immutable string[] args)
  		
     void MainApplicationLoop(){ 
 
-    // thread to receive and draw 
-    auto t = spawn(&receiveThread);
-	immutable string[] args2 = this.args.dup;
-	spawn(&RunGUI,args2);
-    // spawn(&testThread);
-    // t.join();
+        // thread to receive and draw 
+        auto t = spawn(&receiveThread);
+        immutable string[] args2 = this.args.dup;
+        spawn(&RunGUI,args2);
+        // spawn(&testThread);
+        // t.join();
 
         // Flag for determing if we are running the main application loop
 	    bool runApplication = true;
