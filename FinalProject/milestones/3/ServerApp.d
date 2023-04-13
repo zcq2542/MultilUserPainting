@@ -10,6 +10,10 @@ import std.algorithm;
 import std.array;
 import CommandHistory;
 
+import std.datetime;
+import std.typecons;
+import core.thread;
+
 class ServerApp {
     private Socket listener;
     private SocketSet readSet;
@@ -39,6 +43,30 @@ class ServerApp {
     ~this() {
         destroy(buffer);
         this.listener.close();
+    }
+
+    void sendAllCommandHistory(int ClientId, Socket clientSock) {
+        // auto clientSock = this.connectedClientsList[ClientId-1];
+        // clientSock.setOption(SocketOptionLevel.TCP, SocketOption.SNDTIMEO, dur!"seconds"(1));
+        if (this.commandHistory.size() > 0) {
+            writeln("send history");
+            int curPos = this.commandHistory.getCurPos();
+            Thread.sleep(dur!"msecs"(100));
+            auto sP = clientSock.send([curPos]); // sent the position of currentPointer
+            writeln("sent curPointer: ", sP, " bytes");
+            size_t l = this.commandHistory.size();
+            for (int i = 0; i < l; ++i ) {
+                int[] command = this.commandHistory.at(i);
+                Thread.sleep(dur!"msecs"(100));
+                auto sC = clientSock.send(command);
+                writeln("sent Command: ", sC, " bytes");
+            }
+        }
+        Thread.sleep(dur!"msecs"(100));
+        ubyte[] end = [1];
+
+        auto sL = clientSock.send(end); // make sure message received
+        writeln("sent end length: ", sL);
     }
 
     void run() {
@@ -161,6 +189,8 @@ class ServerApp {
                     // newSocket.send("Welcome from server, you are now in our connectedClientsList");
                     newSocket.send([ClientId]);
                     writeln("> client",connectedClientsList.length," added to connectedClientsList");
+                    // if(this.commandHistory.size() > 0)
+                    sendAllCommandHistory(ClientId, newSocket);
                 }
 
             }
