@@ -8,11 +8,12 @@ import std.socket;
 import std.stdio;
 import std.algorithm;
 import std.array;
-import CommandHistory;
+import CommandHistory:CommandHistory;
 
 import std.datetime;
 import std.typecons;
 import core.thread;
+import std.conv;
 
 class ServerApp {
     private Socket listener;
@@ -20,9 +21,10 @@ class ServerApp {
     private Socket[] connectedClientsList;
     private int[] buffer;
     private CommandHistory commandHistory;
+    private int port;
 
 
-    this() {
+    this(int port) {
 
         // A SocketSet is equivalent to 'fd_set'
         // https://linux.die.net/man/3/fd_set
@@ -37,6 +39,7 @@ class ServerApp {
         this.buffer = new int[10240];
 
         this.commandHistory = new CommandHistory();
+        this.port = port;
 
     }
 
@@ -74,10 +77,10 @@ class ServerApp {
         scope(exit) this.listener.close();
         // Set the hostname and port for the socket
         string host = "localhost";
-        ushort port = 50001;
+        ushort portCur = cast(ushort) port;
         // NOTE: It's possible the port number is in use if you are not able
         //       to connect. Try another one.
-        this.listener.bind(new InternetAddress(host,port));
+        this.listener.bind(new InternetAddress(host,portCur));
         // Allow 4 connections to be queued up
         this.listener.listen(4);
         
@@ -198,7 +201,22 @@ class ServerApp {
     }
 }
 
-void main() {
-    ServerApp serverApp = new ServerApp();
+void main(string[] args) {
+    int port;
+
+    if (args.length != 2) {
+        port = 50001;
+    } else {
+    try {
+        port = to!int(args[1]);
+    } catch (Exception e) {
+        port = 50001;
+    }
+    }
+
+
+    ServerApp serverApp = new ServerApp(port);
+    write("Running the server on localhost and on port ");
+    writeln(port);
     serverApp.run();
 }
