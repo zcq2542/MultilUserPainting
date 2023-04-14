@@ -81,8 +81,10 @@ class SDLApp{
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
 	string[] args;
+    int port;
+    string ip;
 
-    this(string[] args){
+    this(string[] args, string ip, int port){
 	 	// Handle initialization...
  		// SDL_Init
         window = SDL_CreateWindow("D SDL Painting",
@@ -95,6 +97,8 @@ class SDLApp{
         usableSurface = Surface(640,480);
         localCommandHistory = new CommandHistory();
 		this.args = args;
+        this.ip = ip;
+        this.port = port;
 
 		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
@@ -104,7 +108,7 @@ class SDLApp{
     	// NOTE: It's possible the port number is in use if you are not
     	//       able to connect. Try another one.
         try {
-            socket.connect(new InternetAddress("localhost", 50001));
+            socket.connect(new InternetAddress(this.ip, cast(ushort) this.port));
             // scope(exit) socket.close();
             writeln("Connected");
 
