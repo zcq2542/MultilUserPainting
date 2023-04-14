@@ -67,7 +67,7 @@ class ChatServer {
                         // server to the client
                         long receivedL = client.receive(buffer);
                         writeln("received bytes: ", receivedL);
-                        if (receivedL <= 1) {
+                        if (receivedL <= 0) {
                             // client.close();
                                                         
                            writeln("end connect");
@@ -99,6 +99,7 @@ class ChatServer {
                     int ClientId = cast(int)connectedClientsList.length;
                     // newSocket.send("Welcome from server, you are now in our connectedClientsList");
                     newSocket.send([ClientId]);
+                    writeln(ClientId);
                     writeln("> client",connectedClientsList.length," added to connectedClientsList");
                 }
 
