@@ -17,6 +17,10 @@ import gdk.Display;
 import gdk.Screen;
 import gtk.StyleContext;
 import gtk.Box;
+import gtk.TextView;
+import gtk.ScrolledWindow;
+import gtk.HBox;
+import gtk.VBox;
 
 // Load the SDL2 library
 import bindbc.sdl;
@@ -73,16 +77,20 @@ shared static ~this(){
 }
 
 class SDLApp{
+    private __gshared char[] buffer2;
     int[] buffer = new int[1024];
     static SDL_Window* window;
     __gshared  Color currentColor;
-    __gshared  Socket socket;
+    __gshared  Socket socket1;
+    __gshared  Socket socket2;
     __gshared  Surface usableSurface;
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
 	string[] args;
     int port;
     string ip;
+  //  __gshared TextView messageBox;
+
 
     this(string[] args, string ip, int port){
 	 	// Handle initialization...
@@ -99,23 +107,27 @@ class SDLApp{
 		this.args = args;
         this.ip = ip;
         this.port = port;
+	this.buffer2 = new char[1024];
+//	this.messageBox = new TextView();
 
 		writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
-        this.socket = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
+        this.socket1 = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
+	this.socket2 = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
     	// Socket needs an 'endpoint', so we determine where we
     	// are going to connect to.
     	// NOTE: It's possible the port number is in use if you are not
     	//       able to connect. Try another one.
         try {
-            socket.connect(new InternetAddress(this.ip, cast(ushort) this.port));
+            socket1.connect(new InternetAddress(this.ip, cast(ushort) this.port));
+	    socket2.connect(new InternetAddress("0.0.0.0", 50002));
             // scope(exit) socket.close();
             writeln("Connected");
 
             // char[1024] buffer;
             // auto received = socket.receive(buffer);
             // writeln("(Client connecting) ", buffer[0 .. received]);
-            auto received = socket.receive(buffer);
+            auto received = socket1.receive(buffer);
             // writeln("rece: ", received);
             this.ClientId = (cast(int[])buffer[0 .. 4])[0];
             writeln("ClientId: ", this.ClientId);
@@ -129,7 +141,9 @@ class SDLApp{
     
  	~this(){
         SDL_DestroyWindow(window);
-		socket.close();
+		socket1.close();
+		socket2.close();
+		destroy(this.buffer2);
  	}
 
     // void connectToServer(string IP, int portNum) {
@@ -155,7 +169,7 @@ class SDLApp{
                     break; 
                 }
             }
-            long nbytes = socket.receive(buffer);
+            long nbytes = socket1.receive(buffer);
             writeln("received nbytes: ", nbytes);
             // If server disconnected, exit thread
             if (nbytes <= 1) {
@@ -207,9 +221,33 @@ class SDLApp{
        }   
 
         // Close the socket
-        if (socket) socket.close();
+        if (socket1) socket1.close();
         writeln("receive thread end");
     }
+
+    static void receiveThread2() {
+	    writeln("THREAD2");
+        // Loop to receive message
+        //scope(exit) this.socket2.close();
+        while (true) {
+            long nbytes = this.socket2.receive(buffer2);
+            // If server disconnected, exit thread
+            if (nbytes <= 0) {
+                writeln("Server disconnected");
+                break;
+            }
+
+            // Print out the received message
+            writeln(buffer2[0..nbytes]);
+            //this.messageBox.getBuffer().setText(to!string(buffer2[0..nbytes]));
+            //writeln(">");
+        }
+
+        // Close the socket
+        this.socket2.close();
+    }
+
+
 
 static void QuitApp(){
 	writeln("Terminating application");
@@ -237,6 +275,63 @@ static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
 
 	hbox.packStart(myButton, true, true, 0);
 }
+
+
+static void ChatBoxGUI(immutable string[] args)
+{
+	string[] args2 = args.dup;
+
+	Main.init(args2);
+	MainWindow window = new MainWindow("ChatBox");
+	window.setDefaultSize(0,0);
+	int w,h;
+        window.getSize(w,h);
+	writeln("width   : ", w);
+	writeln("height  : ", h);
+	window.move(200,240);
+
+	window.addOnDestroy(delegate void(Widget w) {QuitApp(); });
+
+	TextView chatHistory = new TextView();
+    	chatHistory.setEditable(false);
+    	chatHistory.setWrapMode(WrapMode.WORD);
+    	ScrolledWindow chatHistoryScroll = new ScrolledWindow(chatHistory);
+
+	TextView messageBox = new TextView();
+    	messageBox.setWrapMode(WrapMode.WORD);
+    	ScrolledWindow messageBoxScroll = new ScrolledWindow(messageBox);
+    	messageBoxScroll.setPolicy(PolicyType.NEVER, PolicyType.AUTOMATIC);
+
+    	Button sendButton = new Button("Send");
+
+    	HBox messageBoxContainer = new HBox(false, 10);
+    	messageBoxContainer.packStart(messageBoxScroll, true, true, 0);
+    	messageBoxContainer.packEnd(sendButton, false, true, 0);
+
+    	VBox mainContainer = new VBox(false, 10);
+    	mainContainer.packStart(chatHistoryScroll, true, true, 0);
+    	mainContainer.packEnd(messageBoxContainer, false, true, 0);
+
+    	window.add(mainContainer);
+
+    	sendButton.addOnClicked(delegate void(Button bt) {
+        	string message = messageBox.getBuffer().getText();
+        	//messageBox.getBuffer().setText("");
+		string MyId = to!string(this.ClientId);
+        	chatHistory.getBuffer().insertAtCursor("Client"~MyId~":" ~ message ~ "\n");
+		socket2.send("Client"~MyId~":" ~ message ~ "\n");
+    	});
+
+	auto t2 = spawn(&receiveThread2);
+	// Show our window
+        window.showAll();
+
+        // Run our main loop
+        Main.run();
+
+
+}
+
 
 static void RunGUI(immutable string[] args)
 {
@@ -321,7 +416,7 @@ static void RunGUI(immutable string[] args)
         int curPos = -1;
         while(true) {
             writeln("start to receive command history");
-            auto receivedL = this.socket.receive(this.buffer); // num of bytes received
+            auto receivedL = this.socket1.receive(this.buffer); // num of bytes received
             writeln(receivedL);
             if (receivedL <= 1) break;
             int l = cast(int) receivedL / 4; // num of integer received.
@@ -347,8 +442,12 @@ static void RunGUI(immutable string[] args)
         receiveAllCommand();
         // thread to receive and draw 
         auto t = spawn(&receiveThread);
+	//auto t2 = spawn(&receiveThread2);
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
+	spawn(&ChatBoxGUI, args2);
+
+
         // spawn(&testThread);
         // t.join();
 
@@ -384,7 +483,7 @@ static void RunGUI(immutable string[] args)
                     }
                     // t.thread_term();
                     ubyte[] emptyMsg = [1];
-                    long bytesSent = socket.send(emptyMsg);
+                    long bytesSent = socket1.send(emptyMsg);
                     // long bytesSent = socket.send([1]);
                     writeln("Sent ", bytesSent, " bytes");
                     // socket.close();
@@ -409,7 +508,7 @@ static void RunGUI(immutable string[] args)
 	    			// coordinates[0] = totalPoints;
 	    			coordinates[0] = 0; // mark command type as client draw.
                     writeln(coordinates);
-                    this.socket.send(coordinates);
+                    this.socket1.send(coordinates);
                     this.localCommandHistory.add(coordinates);
 	    			totalPoints = 0;
  	    			coordinates.length = 0;
@@ -449,8 +548,8 @@ static void RunGUI(immutable string[] args)
 	    			}
 	    		} */
                 else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
-                    if (socket.isAlive()) {
-                        socket.send([-1]); // send undo message to server.
+                    if (socket1.isAlive()) {
+                        socket1.send([-1]); // send undo message to server.
                     }
                     else {
                         try {
@@ -471,8 +570,8 @@ static void RunGUI(immutable string[] args)
                    ctrlZPressed = false; 
                 }
                 else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
-                    if (socket.isAlive()) {
-                        socket.send([1]); // send redo message to server.
+                    if (socket1.isAlive()) {
+                        socket1.send([1]); // send redo message to server.
                     }
                     else {
                         try {
