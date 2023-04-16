@@ -25,6 +25,7 @@ import loader = bindbc.loader.sharedlib;
 import Surface:Surface;
 import Color:Color;
 import CommandHistory:CommandHistory;
+import ChatClient:ChatClient;
 
 const SDLSupport ret;
 
@@ -80,6 +81,7 @@ class SDLApp{
     __gshared  Surface usableSurface;
     __gshared CommandHistory localCommandHistory;
     __gshared int ClientId;
+    __gshared ChatClient chatClient;
 	string[] args;
     int port;
     string ip;
@@ -120,6 +122,8 @@ class SDLApp{
             this.ClientId = (cast(int[])buffer[0 .. 4])[0];
             writeln("ClientId: ", this.ClientId);
             // connectToServer("localhost", 50001);
+            this.chatClient = new ChatClient();
+            // chatClient.run();
         }
         catch (Exception e) {
             writeln(e.msg);
@@ -172,16 +176,16 @@ class SDLApp{
             int intL = cast(int)nbytes/4;
 		    int[] array = buffer[1 .. intL];
             //int[] array = buffer[1 .. nbytes/4];
-            writeln("array:", array);
+            // writeln("array:", array);
             int[] cmd = new int[intL];
             cmd[] = buffer[0 .. intL];
-            writeln("copy ok");
+            // writeln("copy ok");
             if (type == 0)
                 localCommandHistory.add(cmd);
             else if (type == -1)
                 localCommandHistory.undo();
             else if (type == 1){
-                writeln("got here redo");
+                // writeln("got here redo");
                 localCommandHistory.redo();
             }
             // int [] array = [255, 0, 0, 153, 244, 155, 255, 156, 266];
@@ -255,9 +259,9 @@ static void RunGUI(immutable string[] args)
 	myWindow.setDefaultSize(0,0);
 	int w,h;
 	myWindow.getSize(w,h);
-	writeln("width   : ",w);
-	writeln("height  : ",h);
-	myWindow.move(100,120);
+	// writeln("width   : ",w);
+	// writeln("height  : ",h);
+	// myWindow.move(100,120);
 	
 	// Delegate to call when we destroy our application
 	myWindow.addOnDestroy(delegate void(Widget w) { QuitApp(); });
@@ -320,16 +324,16 @@ static void RunGUI(immutable string[] args)
         int commandReceived = 0;
         int curPos = -1;
         while(true) {
-            writeln("start to receive command history");
+            // writeln("start to receive command history");
             auto receivedL = this.socket.receive(this.buffer); // num of bytes received
             writeln(receivedL);
             if (receivedL <= 1) break;
             int l = cast(int) receivedL / 4; // num of integer received.
-            writeln("buffer: ", buffer[0 .. l]);
+            // writeln("buffer: ", buffer[0 .. l]);
             if (commandReceived == 0) {
                 
                 curPos = this.buffer[0 .. l][0];
-                writeln("curPos: ", curPos);
+                // writeln("curPos: ", curPos);
             }
             else {
                 int[] command = this.buffer[0 .. l].dup; // deep copy.
@@ -349,9 +353,9 @@ static void RunGUI(immutable string[] args)
         auto t = spawn(&receiveThread);
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
+        // spawn(&chatClient.run());
         // spawn(&testThread);
         // t.join();
-
         // Flag for determing if we are running the main application loop
 	    bool runApplication = true;
 	    // Flag for determining if we are 'drawing' (i.e. mouse has been pressed
@@ -363,7 +367,7 @@ static void RunGUI(immutable string[] args)
 
 	    int[] coordinates = new int[0];
 
-        writeln(this.usableSurface.getPixel(153, 244));
+        // writeln(this.usableSurface.getPixel(153, 244));
     
         int totalPoints = 0;
 	    // Main application loop that will run until a quit event has occurred.
@@ -408,7 +412,7 @@ static void RunGUI(immutable string[] args)
 	    			// writeln(coordinates); // Send to server
 	    			// coordinates[0] = totalPoints;
 	    			coordinates[0] = 0; // mark command type as client draw.
-                    writeln(coordinates);
+                    // writeln(coordinates);
                     this.socket.send(coordinates);
                     this.localCommandHistory.add(coordinates);
 	    			totalPoints = 0;
