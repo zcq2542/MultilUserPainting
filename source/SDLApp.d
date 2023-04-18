@@ -21,7 +21,11 @@ import gtk.TextView;
 import gtk.ScrolledWindow;
 import gtk.HBox;
 import gtk.VBox;
-
+import std.utf;
+import glib.MainLoop;
+import glib.MainContext;
+import glib.Timeout;
+import std.algorithm.searching;
 // Load the SDL2 library
 import bindbc.sdl;
 import loader = bindbc.loader.sharedlib;
@@ -85,11 +89,12 @@ class SDLApp{
     __gshared  Socket socket2;
     __gshared  Surface usableSurface;
     __gshared CommandHistory localCommandHistory;
+    __gshared string chatHistoryStr;
+    __gshared bool chatUpdated;
     __gshared int ClientId;
 	string[] args;
     int port;
     string ip;
-  //  __gshared TextView messageBox;
 
 
     this(string[] args, string ip, int port){
@@ -108,9 +113,10 @@ class SDLApp{
         this.ip = ip;
         this.port = port;
 	this.buffer2 = new char[1024];
-//	this.messageBox = new TextView();
+	this.chatUpdated = false;
+	this.chatHistoryStr = "";
 
-		writeln("Starting client...attempt to create socket");
+	writeln("Starting client...attempt to create socket");
         // Create a socket for connecting to a server
         this.socket1 = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
 	this.socket2 = new Socket(AddressFamily.INET, std.socket.SocketType.STREAM);
@@ -226,21 +232,24 @@ class SDLApp{
     }
 
     static void receiveThread2() {
-	    writeln("THREAD2");
         // Loop to receive message
         //scope(exit) this.socket2.close();
         while (true) {
             long nbytes = this.socket2.receive(buffer2);
             // If server disconnected, exit thread
-            if (nbytes <= 0) {
+            if (nbytes <= 1) {
                 writeln("Server disconnected");
                 break;
             }
 
-            // Print out the received message
-            writeln(buffer2[0..nbytes]);
-            //this.messageBox.getBuffer().setText(to!string(buffer2[0..nbytes]));
-            //writeln(">");
+	    string message = to!string(buffer2[0..nbytes]);
+	    string message2;
+	    auto index = message.indexOf("EOM");
+	    if (index > 0) {
+		    message2 = message[0..index];
+	    }
+	    chatHistoryStr ~= message2;
+	    chatUpdated = true;
         }
 
         // Close the socket
@@ -283,9 +292,10 @@ static void ChatBoxGUI(immutable string[] args)
 
 	Main.init(args2);
 	MainWindow window = new MainWindow("ChatBox");
-	window.setDefaultSize(0,0);
+
+
+	window.setDefaultSize(400,400);
 	int w,h;
-        window.getSize(w,h);
 	writeln("width   : ", w);
 	writeln("height  : ", h);
 	window.move(200,240);
@@ -316,19 +326,29 @@ static void ChatBoxGUI(immutable string[] args)
 
     	sendButton.addOnClicked(delegate void(Button bt) {
         	string message = messageBox.getBuffer().getText();
-        	//messageBox.getBuffer().setText("");
 		string MyId = to!string(this.ClientId);
-        	chatHistory.getBuffer().insertAtCursor("Client"~MyId~":" ~ message ~ "\n");
-		socket2.send("Client"~MyId~":" ~ message ~ "\n");
+		messageBox.getBuffer().setText("");
+		chatHistoryStr ~= "Client"~MyId~" : " ~ message ~ "\n";
+		chatUpdated = true;
+		socket2.send("Client"~MyId~" : " ~ message ~ "\n" ~ "EOM");
     	});
 
-	auto t2 = spawn(&receiveThread2);
 	// Show our window
         window.showAll();
 
-        // Run our main loop
-        Main.run();
 
+    	// Create a new timeout and attach the update function to it
+    	auto timeout = new Timeout(cast(uint)1000, delegate bool() {
+			if (chatUpdated && chatHistoryStr != null && chatHistoryStr.length > 0) {
+				chatHistory.getBuffer().setText(toUTF8(chatHistoryStr ~ "\n"));
+				chatUpdated = false;
+			}
+			return true;});
+
+
+	Main.run();
+
+        Main.quit(); // Clean up and exit the application
 
 }
 
@@ -442,11 +462,11 @@ static void RunGUI(immutable string[] args)
         receiveAllCommand();
         // thread to receive and draw 
         auto t = spawn(&receiveThread);
-	//auto t2 = spawn(&receiveThread2);
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
 	spawn(&ChatBoxGUI, args2);
 
+	auto t2 = spawn(&receiveThread2);
 
         // spawn(&testThread);
         // t.join();
