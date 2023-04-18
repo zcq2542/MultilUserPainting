@@ -246,7 +246,7 @@ class SDLApp{
  */
 static void QuitApp(){
 	writeln("Terminating application");
-	Main.quit();
+	//Main.quit();
 }
 
 /** 
@@ -445,101 +445,60 @@ static void RunGUI(immutable string[] args)
         this.localCommandHistory.setCurPos(curPos);
     }
  	
-    /** 
-     * main loop. capture user mouse and keyboard actions. drawing on surface or redo/undo.
-     */
-    void MainApplicationLoop(){ 
+    public void pollEvents(ref Socket skt, ref Socket skt2, ref bool runApplication,
+        ref bool drawing, ref bool ctrlZPressed,
+        ref bool ctrlYPressed, ref int[] coordinates,
+        ref SDL_Event e) {
 
-        receiveAllCommand();
-        // thread to receive and draw 
-        auto t = spawn(&receiveThread);
-        	auto t2 = spawn(&receiveThread2);
+        while(SDL_PollEvent(&e) !=0){
+            if(e.type == SDL_QUIT){
+                synchronized{
+                    QuitApp();
+                    end = true;
+                    writeln("main end:", end);
+                }
+                ubyte[] emptyMsg = [1];
+                long bytesSent = skt.send(emptyMsg);
+                writeln("Sent ", bytesSent, " bytes");
+                // socket.close();
+                writeln("waiting all thread finish");
+                // thread_suspendAll();
+                // thread_term();
+                thread_joinAll();
+                runApplication= false;
+                // send(t.id, "terminate"); // ask receiveThread to stop.
+                // t.terminate;
+            }
+            else if(e.type == SDL_MOUSEBUTTONDOWN){
+                drawing=true;
+                coordinates ~= -1;
+                coordinates ~= currentColor.r;
+                coordinates ~= currentColor.g;
+                coordinates ~= currentColor.b;
+            }else if(e.type == SDL_MOUSEBUTTONUP){
+                drawing=false;
+                coordinates[0] = 0; // mark command type as client draw.
+                writeln(coordinates);
+                skt.send(coordinates);
+                this.localCommandHistory.add(coordinates);
+                coordinates.length = 0;
+            }else if(e.type == SDL_MOUSEMOTION && drawing){
+                // retrieve the position
+                int xPos = e.button.x;
+                int yPos = e.button.y;
 
-        immutable string[] args2 = this.args.dup;
-        spawn(&RunGUI,args2);
-
-        // Flag for determing if we are running the main application loop
-	    bool runApplication = true;
-	    // Flag for determining if we are 'drawing' (i.e. mouse has been pressed
-	    //                                                but not yet released)
-	    bool drawing = false;
-
-        bool ctrlZPressed = false;
-        bool ctrlYPressed = false;
-
-	    int[] coordinates = new int[0];
-
-        writeln(this.usableSurface.getPixel(153, 244));
-    
-        int totalPoints = 0;
-	    // Main application loop that will run until a quit event has occurred.
-	    // This is the 'main graphics loop'
-	    while(runApplication){
-	    	SDL_Event e;
-	    	// Handle events
-	    	// Events are pushed into an 'event queue' internally in SDL, and then
-	    	// handled one at a time within this loop for as many events have
-	    	// been pushed into the internal SDL queue. Thus, we poll until there
-	    	// are '0' events or a NULL event is returned.
-	    	while(SDL_PollEvent(&e) !=0){
-	    		if(e.type == SDL_QUIT){
-                    synchronized{
-    					QuitApp();
-                        // end = true;
-                        // writeln("main end:", end);
+                int brushSize=4;
+                coordinates ~= xPos;
+                coordinates ~= yPos;
+                for(int w=-brushSize; w < brushSize; w++){
+                    for(int h=-brushSize; h < brushSize; h++){
+                        usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
                     }
-                    // t.thread_term();
-                    ubyte[] emptyMsg = [1];
-                    long bytesSent = socket1.send(emptyMsg);
-                    long bytesSent2 = socket2.send("e");
-                    writeln("Sent ", bytesSent, " bytes");
-                    writeln("Sent ", bytesSent2, " bytes to server 2");
-                    // socket.close();
-                    writeln("waiting all thread finish");
-                    // thread_suspendAll();
-                    // thread_term();
-                    thread_joinAll();
-                    runApplication= false;
-                    // send(t.id, "terminate"); // ask receiveThread to stop.
-                    // t.terminate;
-	    		}
-	    		else if(e.type == SDL_MOUSEBUTTONDOWN){
-	    			drawing=true;
-	    			coordinates ~= -1;
-	    			coordinates ~= currentColor.r;
-	    			coordinates ~= currentColor.g;
-	    			coordinates ~= currentColor.b;
-
-	    		}else if(e.type == SDL_MOUSEBUTTONUP){
-	    			drawing=false;
-	    			// writeln(coordinates); // Send to server
-	    			// coordinates[0] = totalPoints;
-	    			coordinates[0] = 0; // mark command type as client draw.
-                    // writeln(coordinates);
-                    this.socket1.send(coordinates);
-                    this.localCommandHistory.add(coordinates);
-	    			totalPoints = 0;
- 	    			coordinates.length = 0;
-	    		}else if(e.type == SDL_MOUSEMOTION && drawing){
-	    			// retrieve the position
-	    			int xPos = e.button.x;
-	    			int yPos = e.button.y;
-	    			// Loop through and update specific pixels
-	    			// NOTE: No bounds checking performed --
-	    			//       think about how you might fix this :)
-	    			int brushSize=4;
-	    			coordinates ~= xPos;
-	    			coordinates ~= yPos;
-	    			totalPoints +=1;
-	    			for(int w=-brushSize; w < brushSize; w++){
-	    				for(int h=-brushSize; h < brushSize; h++){
-	    					usableSurface.UpdateSurfacePixel(xPos+w,yPos+h,currentColor);
-	    				}
-	    			}
-	    		}
-                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
-                    if (socket1.isAlive()) {
-                        socket1.send([-1]); // send undo message to server.
+                }
+            }
+            else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL && !ctrlZPressed) {
+                    if (skt.isAlive()) {
+                        skt.send([-1]); // send undo message to server.
                     }
                     else {
                         try {
@@ -557,35 +516,52 @@ static void RunGUI(immutable string[] args)
                     ctrlZPressed = true;
                 }
                 else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_z && e.key.keysym.mod & KMOD_CTRL) {
-                   ctrlZPressed = false; 
-                }
-                else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
-                    if (socket1.isAlive()) {
-                        socket1.send([1]); // send redo message to server.
+                        ctrlZPressed = false;
                     }
-                    else {
-                        try {
-                            int[] cmd = localCommandHistory.redo();
-                            draw(cmd[1 .. $], 4);
+                    else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL && !ctrlYPressed) {
+                            if (skt.isAlive()) {
+                                skt.send([1]); // send redo message to server.
+                            }
+                            else {
+                                try {
+                                    int[] cmd = localCommandHistory.redo();
+                                    draw(cmd[1 .. $], 4);
+                                }
+                                catch (Exception e) {
+                                    writeln(e.msg);
+                                }
+                            }
+                            ctrlYPressed = true;
                         }
-                        catch (Exception e) {
-                            writeln(e.msg);
-                        }
-                    }
-                    ctrlYPressed = true;
-                }
-                else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL) {
-                   ctrlYPressed = false; 
-                }
-	    	}
+                        else if (e.type == SDL_KEYUP && e.key.keysym.sym == SDLK_y && e.key.keysym.mod & KMOD_CTRL) {
+                                ctrlYPressed = false;
+                            }
+        }
+    }
+ 
+    /**
+     * main loop. capture user mouse and keyboard actions. drawing on surface or redo/undo.
+     */    
+    void MainApplicationLoop(){ 
 
-	    	// Blit the surace (i.e. update the window with another surfaces pixels
-	    	//                       by copying those pixels onto the window).
-	    	// Delay for 16 milliseconds
+        receiveAllCommand();
+        auto t = spawn(&receiveThread); // thread to receive and draw
+	auto t2 = spawn(&receiveThread2);
+        immutable string[] args2 = this.args.dup;
+        spawn(&RunGUI,args2);
+
+        bool runApplication = true;
+        bool drawing = false;
+        bool ctrlZPressed = false;
+        bool ctrlYPressed = false;
+        int[] coordinates = new int[0];
+
+	    while(runApplication){
+            SDL_Event e;
+            pollEvents(this.socket1, this.socket2, runApplication, drawing, ctrlZPressed, ctrlYPressed, coordinates, e);
+
 	    	SDL_BlitSurface(usableSurface.imgSurface,null,SDL_GetWindowSurface(window),null);
-	    	// Update the window surface
 	    	SDL_UpdateWindowSurface(window);
-	    	// Otherwise the program refreshes too quickly
 	    	SDL_Delay(100);
 	    }
     }
