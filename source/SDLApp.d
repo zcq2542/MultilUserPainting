@@ -17,6 +17,7 @@ import gdk.Display;
 import gdk.Screen;
 import gtk.StyleContext;
 import gtk.Box;
+import gtk.Label;
 import gtk.TextView;
 import gtk.ScrolledWindow;
 import gtk.HBox;
@@ -283,75 +284,7 @@ static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
 						});
 
 	hbox.packStart(myButton, true, true, 0);
-}
-
-
-static void ChatBoxGUI(immutable string[] args)
-{
-	string[] args2 = args.dup;
-
-	Main.init(args2);
-	MainWindow window = new MainWindow("ChatBox");
-
-
-	window.setDefaultSize(400,400);
-	int w,h;
-	writeln("width   : ", w);
-	writeln("height  : ", h);
-	window.move(200,240);
-
-	window.addOnDestroy(delegate void(Widget w) {QuitApp(); });
-
-	TextView chatHistory = new TextView();
-    	chatHistory.setEditable(false);
-    	chatHistory.setWrapMode(WrapMode.WORD);
-    	ScrolledWindow chatHistoryScroll = new ScrolledWindow(chatHistory);
-
-	TextView messageBox = new TextView();
-    	messageBox.setWrapMode(WrapMode.WORD);
-    	ScrolledWindow messageBoxScroll = new ScrolledWindow(messageBox);
-    	messageBoxScroll.setPolicy(PolicyType.NEVER, PolicyType.AUTOMATIC);
-
-    	Button sendButton = new Button("Send");
-
-    	HBox messageBoxContainer = new HBox(false, 10);
-    	messageBoxContainer.packStart(messageBoxScroll, true, true, 0);
-    	messageBoxContainer.packEnd(sendButton, false, true, 0);
-
-    	VBox mainContainer = new VBox(false, 10);
-    	mainContainer.packStart(chatHistoryScroll, true, true, 0);
-    	mainContainer.packEnd(messageBoxContainer, false, true, 0);
-
-    	window.add(mainContainer);
-
-    	sendButton.addOnClicked(delegate void(Button bt) {
-        	string message = messageBox.getBuffer().getText();
-		string MyId = to!string(this.ClientId);
-		messageBox.getBuffer().setText("");
-		chatHistoryStr ~= "Client"~MyId~" : " ~ message ~ "\n";
-		chatUpdated = true;
-		socket2.send("Client"~MyId~" : " ~ message ~ "\n" ~ "EOM");
-    	});
-
-	// Show our window
-        window.showAll();
-
-
-    	// Create a new timeout and attach the update function to it
-    	auto timeout = new Timeout(cast(uint)1000, delegate bool() {
-			if (chatUpdated && chatHistoryStr != null && chatHistoryStr.length > 0) {
-				chatHistory.getBuffer().setText(toUTF8(chatHistoryStr ~ "\n"));
-				chatUpdated = false;
-			}
-			return true;});
-
-
-	Main.run();
-
-        Main.quit(); // Clean up and exit the application
-
-}
-
+}	
 
 static void RunGUI(immutable string[] args)
 {
@@ -401,10 +334,54 @@ static void RunGUI(immutable string[] args)
 			}
 			vbox.add(hbox);
 	}
-
 	Display display = Display.getDefault();
     Screen screen = display.getDefaultScreen();
     StyleContext.addProviderForScreen(screen, provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    TextView chatHistory = new TextView();
+    	chatHistory.setEditable(false);
+    	chatHistory.setWrapMode(WrapMode.WORD);
+    	ScrolledWindow chatHistoryScroll = new ScrolledWindow(chatHistory);
+
+	TextView messageBox = new TextView();
+    	messageBox.setWrapMode(WrapMode.WORD);
+    	ScrolledWindow messageBoxScroll = new ScrolledWindow(messageBox);
+    	messageBoxScroll.setPolicy(PolicyType.NEVER, PolicyType.AUTOMATIC);
+
+    	Button sendButton = new Button("Send");
+
+    	HBox messageBoxContainer = new HBox(false, 10);
+    	messageBoxContainer.packStart(messageBoxScroll, true, true, 0);
+    	messageBoxContainer.packEnd(sendButton, false, true, 0);
+
+    	VBox mainContainer = new VBox(false, 10);
+
+        auto label = new Label("Chat");
+    mainContainer.packStart(label, false, false, 5);
+
+    	mainContainer.packStart(chatHistoryScroll, true, true, 0);
+    	mainContainer.packEnd(messageBoxContainer, false, true, 0);
+
+        mainContainer.setSizeRequest(-1, 200);
+
+    	vbox.add(mainContainer);
+
+    	sendButton.addOnClicked(delegate void(Button bt) {
+        	string message = messageBox.getBuffer().getText();
+		string MyId = to!string(this.ClientId);
+		messageBox.getBuffer().setText("");
+		chatHistoryStr ~= "Client"~MyId~" : " ~ message ~ "\n";
+		chatUpdated = true;
+		socket2.send("Client"~MyId~" : " ~ message ~ "\n" ~ "EOM");
+    	});
+
+    	// Create a new timeout and attach the update function to it
+    	auto timeout = new Timeout(cast(uint)1000, delegate bool() {
+			if (chatUpdated && chatHistoryStr != null && chatHistoryStr.length > 0) {
+				chatHistory.getBuffer().setText(toUTF8(chatHistoryStr ~ "\n"));
+				chatUpdated = false;
+			}
+			return true;});
 
 
 	// Add our button as a child of our window
@@ -466,7 +443,6 @@ static void RunGUI(immutable string[] args)
 
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
-	spawn(&ChatBoxGUI, args2);
         // spawn(&testThread);
         // t.join();
 
