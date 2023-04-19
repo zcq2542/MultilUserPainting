@@ -25,6 +25,7 @@
 	"copyright": "Copyright © 2023, team-aurora",
 	"dependencies": {
 		"bindbc-sdl": "~>1.2.4",
+		"dscanner": "~>0.14.0",
 		"gtk-d": "~>3.10.0"
 	},
 	"description": "A collaborative paint application",
