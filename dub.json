@@ -32,5 +32,10 @@
 	"license": "proprietary",
 	"name": "finalproject-aurora",
 	"targetPath": "bin",
-	"targetType": "executable"
+	"targetType": "executable",
+	"excludedSourceFiles": [
+		"source/chat/ChatClient.d",
+		"source/chat/ChatServer.d",
+		"source/server/ServerApp.d"
+	]
 }

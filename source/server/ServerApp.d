@@ -8,7 +8,7 @@ import std.socket;
 import std.stdio;
 import std.algorithm;
 import std.array;
-import CommandHistory:CommandHistory;
+import common.CommandHistory;
 
 import std.datetime;
 import std.typecons;

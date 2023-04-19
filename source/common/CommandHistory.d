@@ -1,5 +1,7 @@
-import Deque:Deque;
-import Node:Node;
+module common.CommandHistory;
+
+import common.Deque;
+import common.Node;
 
 import std.stdio;
 import std.exception;

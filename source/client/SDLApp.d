@@ -33,7 +33,7 @@ import loader = bindbc.loader.sharedlib;
 
 import Surface:Surface;
 import Color:Color;
-import CommandHistory:CommandHistory;
+import common.CommandHistory;
 
 const SDLSupport ret;
 
@@ -550,7 +550,7 @@ static void RunGUI(immutable string[] args)
 
         receiveAllCommand();
         auto t = spawn(&receiveThread); // thread to receive and draw
-	auto t2 = spawn(&receiveThread2);
+	    auto t2 = spawn(&receiveThread2);
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
 

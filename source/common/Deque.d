@@ -1,12 +1,9 @@
-// Run your program with: 
-// dmd Deque.d -unittest -of=test && ./test
-//
-// This will execute each of the unit tests telling you if they passed.
+module common.Deque;
 
 import std.stdio;
 import std.exception;
 import core.exception : AssertError;
-import Node:Node;
+import common.Node;
 
 
 /*
