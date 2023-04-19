@@ -159,9 +159,9 @@ class SDLApp{
         int[10240] buffer;
         while (true) {
             synchronized{ // not work. intend to use this to end thread.
-                writeln("end: ", end);
+                // writeln("end: ", end);
                 if (end) {
-                    writeln("end:", end);
+                    // writeln("end:", end);
                     break; 
                 }
             }
@@ -265,11 +265,11 @@ struct Data {
 /** 
  * create color button for color panel.
  * Params:
- *   r = 
- *   g = 
- *   b = 
- *   text = 
- *   hbox = 
+ *   r = red color 0-255
+ *   g = green color 0-255
+ *   b = blue color 0-255
+ *   text = test of color
+ *   hbox = box in panel
  */
 static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
 	Button myButton = new Button("");
@@ -286,7 +286,7 @@ static void createButton(ubyte r, ubyte g, ubyte b, string text, Box hbox){
 /** 
  * run the color panel GUI
  * Params:
- *   args = 
+ *   args = used to init GTK
  */
 static void RunGUI(immutable string[] args)
 {
@@ -485,8 +485,8 @@ static void RunGUI(immutable string[] args)
 	    		if(e.type == SDL_QUIT){
                     synchronized{
     					QuitApp();
-                    end = true;
-                        writeln("main end:", end);
+                        // end = true;
+                        // writeln("main end:", end);
                     }
                     // t.thread_term();
                     ubyte[] emptyMsg = [1];
@@ -515,7 +515,7 @@ static void RunGUI(immutable string[] args)
 	    			// writeln(coordinates); // Send to server
 	    			// coordinates[0] = totalPoints;
 	    			coordinates[0] = 0; // mark command type as client draw.
-                    writeln(coordinates);
+                    // writeln(coordinates);
                     this.socket1.send(coordinates);
                     this.localCommandHistory.add(coordinates);
 	    			totalPoints = 0;
