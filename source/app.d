@@ -3,7 +3,7 @@ import SDLApp:SDLApp;
 import std.stdio;
 import std.conv;
 
-// Entry point to program
+/// Entry point to program 
 void main(string[] args)
 {
 	int port;

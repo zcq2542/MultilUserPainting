@@ -1,3 +1,6 @@
+/** 
+ * Clolor struct, restore the pixel color info.
+ */
 struct Color {
 	ubyte r;
 	ubyte g;

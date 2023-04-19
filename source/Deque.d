@@ -9,7 +9,7 @@ import core.exception : AssertError;
 import Node:Node;
 
 
-/*
+/**
     The following is an interface for a Deque data structure.
     Generally speaking we call these containers.
     
@@ -40,7 +40,7 @@ interface Container(T){
     size_t size();
 }
 
-/*
+/**
     A Deque is a double-ended queue in which we can push and
     pop elements.
     frontPointer     Node            backPointer
@@ -74,7 +74,11 @@ class Deque(T) : Container!(T){
       }
     }
     
-
+    /** 
+     * push to front.
+     * Params:
+     *   x = element value push to front.
+     */
     public:
     override void push_front(T x) {
         Node!(T) newNode = new Node!(T)(x);
@@ -84,6 +88,12 @@ class Deque(T) : Container!(T){
         newNode.prev = this.frontPointer;
         ++this.DequeSize;
     }
+
+    /** 
+     * push to back.
+     * Params:
+     *   x = value of element.
+     */
     override void push_back(T x) {
         Node!(T) newNode = new Node!(T)(x);
         newNode.prev = this.backPointer.prev;
@@ -92,6 +102,11 @@ class Deque(T) : Container!(T){
         this.backPointer.prev = newNode;
         ++this.DequeSize;
     }
+
+    /** 
+     * pop front.
+     * Returns: front node value
+     */
     override T pop_front() {
         assert(this.DequeSize > 0);
         T res = this.frontPointer.next.val;
@@ -103,6 +118,10 @@ class Deque(T) : Container!(T){
         return res;
     }
 
+    /** 
+     * pop bck
+     * Returns: back node value. 
+     */
     override T pop_back() {
         assert(this.DequeSize > 0);
         Node!(T) cur = this.backPointer.prev;
@@ -114,6 +133,12 @@ class Deque(T) : Container!(T){
         return res;
     }
 
+    /** 
+     * return the refe at position pos.
+     * Params:
+     *   pos = position of node.
+     * Returns: the ref value of node at pos.
+     */
     override ref T at(size_t pos) {
         assert(DequeSize > pos);
         Node!(T) cur = this.frontPointer.next;
@@ -123,16 +148,28 @@ class Deque(T) : Container!(T){
         return cur.val;
     }
 
+    /** 
+     * return ref of back.
+     * Returns: the value(ref) of back.
+     */
     override ref T back() {
         assert(this.DequeSize > 0);
         return (this.backPointer.prev.val);
     }
 
+    /** 
+     * front node value(ref)
+     * Returns: front node value(ref)
+     */
     override ref T front() {
         assert(this.DequeSize > 0);
         return (this.frontPointer.next.val);
     }
 
+    /** 
+     * size of Deque.
+     * Returns: size of Deque.
+     */
     override size_t size() {
         return this.DequeSize;
     }
