@@ -48,6 +48,7 @@ unittest{
 	SDLApp sdlapp = new SDLApp(args ,"0.0.0.0", 49494);
 	string log = "";
 	Socket skt = new MockSocket(log);
+	Socket skt2 = new MockSocket(log);
 	bool runApplication = true;
 	bool drawing = false;
 	bool ctrlZPressed = false;
@@ -57,7 +58,7 @@ unittest{
 	SDL_Event e;
 	e.type = SDL_MOUSEBUTTONUP;
 	SDL_PushEvent(&e);
-	sdlapp.pollEvents(skt, runApplication, drawing, ctrlZPressed, ctrlYPressed, coordinates, e);
+	sdlapp.pollEvents(skt, skt2, runApplication, drawing, ctrlZPressed, ctrlYPressed, coordinates, e);
 	assert(log.equal("send called") == true);
 	assert(drawing == false);
 	assert(coordinates.length == 0);
