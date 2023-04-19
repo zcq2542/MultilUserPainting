@@ -10,3 +10,11 @@
   - [ ] (Optional) Run your code with the latest version of clang-tidy  (could be a github action)
 
 *Modify this file to include instructions on how to build and run your software. Specify which platform you are running on. Running your software involves launching a server and connecting at least 2 clients to the server.*
+
+We build the App on Ubuntu platform.
+1. Installing SDL if you don't have. (https://wiki.libsdl.org/SDL2/Installation)
+2. Installing GTKD. with command apt-get install libgtkd-3-dev
+3. go to the dir FinalProject-AURORA/source/  run the server as rdmd -I./common server/ServerApp.d
+4. go to the dir FinalProject-AURORA/source/chat  run the chat server as rdmd ChatServer.d
+4. go to root dir. FinalProject-AURORA. dub run -- 127.0.0.1 50001
+then the SDLApp should be running.
