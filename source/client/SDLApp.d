@@ -1,4 +1,6 @@
 // Import D standard libraries
+module client.SDLApp;
+
 import std.stdio;
 import std.string;
 
@@ -31,8 +33,8 @@ import std.algorithm.searching;
 import bindbc.sdl;
 import loader = bindbc.loader.sharedlib;
 
-import Surface:Surface;
-import Color:Color;
+import client.Surface;
+import client.Color;
 import common.CommandHistory;
 
 const SDLSupport ret;

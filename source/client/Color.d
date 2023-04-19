@@ -1,5 +1,6 @@
-/** 
- * Clolor struct, restore the pixel color info.
+module client.Color;
+/**
+ * Color struct, restore the pixel color info.
  */
 struct Color {
 	ubyte r;

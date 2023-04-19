@@ -1,6 +1,8 @@
-import SDLApp:SDLApp;
-import Surface:Surface;
-import Color:Color;
+module client.test;
+
+import client.SDLApp;
+import client.Surface;
+import client.Color;
 import bindbc.sdl;
 import loader = bindbc.loader.sharedlib;
 import std.socket;

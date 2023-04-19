@@ -12,7 +12,7 @@
 				"unit-threaded": "~>2.1.2"
 			},
 			"excludedSourceFiles": [
-				"source/app.d"
+				"source/client/app.d"
 			],
 			"mainSourceFile": "bin/ut.d",
 			"name": "unittest",

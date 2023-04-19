@@ -1,5 +1,7 @@
 /// Run with: 'dub'
-import SDLApp:SDLApp;
+module client.app;
+
+import client.SDLApp;
 import std.stdio;
 import std.conv;
 

@@ -1,4 +1,6 @@
-import Color:Color;
+module client.Spot;
+
+import client.Color;
 
 /** 
  * Spot class has pixel coordinates and color.

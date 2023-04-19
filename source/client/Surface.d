@@ -1,10 +1,12 @@
 // Import D standard libraries
+module client.Surface;
+
 import std.string;
 
 // Load the SDL2 library
 import bindbc.sdl;
 
-import Color:Color;
+import client.Color;
 
 /** 
  * Surface struct.
