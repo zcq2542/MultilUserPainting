@@ -444,7 +444,9 @@ static void RunGUI(immutable string[] args)
         }
         this.localCommandHistory.setCurPos(curPos);
     }
- 	
+
+
+
     public void pollEvents(ref Socket skt, ref Socket skt2, ref bool runApplication,
         ref bool drawing, ref bool ctrlZPressed,
         ref bool ctrlYPressed, ref int[] coordinates,
@@ -460,6 +462,8 @@ static void RunGUI(immutable string[] args)
                 ubyte[] emptyMsg = [1];
                 long bytesSent = skt.send(emptyMsg);
                 writeln("Sent ", bytesSent, " bytes");
+		long bytesSent2 = skt2.send("e");
+                writeln("Sent ", bytesSent2, " bytes to server 2");
                 // socket.close();
                 writeln("waiting all thread finish");
                 // thread_suspendAll();
