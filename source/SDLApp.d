@@ -246,7 +246,7 @@ class SDLApp{
  */
 static void QuitApp(){
 	writeln("Terminating application");
-	//Main.quit();
+	Main.quit();
 }
 
 /** 
