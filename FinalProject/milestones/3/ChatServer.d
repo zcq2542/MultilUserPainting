@@ -67,7 +67,7 @@ class ChatServer {
                         // server to the client
                         long receivedL = client.receive(buffer);
                         writeln("received bytes: ", receivedL);
-                        if (receivedL <= 0) {
+                        if (receivedL <= 1) {
                             // client.close();
                                                         
                            writeln("end connect");

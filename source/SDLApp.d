@@ -235,7 +235,7 @@ class SDLApp{
         // Loop to receive message
         //scope(exit) this.socket2.close();
         while (true) {
-            long nbytes = this.socket2.receive(buffer2);
+            long nbytes = socket2.receive(buffer2);
             // If server disconnected, exit thread
             if (nbytes <= 1) {
                 writeln("Server disconnected");
@@ -253,7 +253,7 @@ class SDLApp{
         }
 
         // Close the socket
-        this.socket2.close();
+             if (socket2) socket2.close();
     }
 
 
@@ -462,12 +462,11 @@ static void RunGUI(immutable string[] args)
         receiveAllCommand();
         // thread to receive and draw 
         auto t = spawn(&receiveThread);
+        	auto t2 = spawn(&receiveThread2);
+
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
 	spawn(&ChatBoxGUI, args2);
-
-	auto t2 = spawn(&receiveThread2);
-
         // spawn(&testThread);
         // t.join();
 
@@ -504,8 +503,9 @@ static void RunGUI(immutable string[] args)
                     // t.thread_term();
                     ubyte[] emptyMsg = [1];
                     long bytesSent = socket1.send(emptyMsg);
-                    // long bytesSent = socket.send([1]);
+                    long bytesSent2 = socket2.send("e");
                     writeln("Sent ", bytesSent, " bytes");
+                    writeln("Sent ", bytesSent2, " bytes to server 2");
                     // socket.close();
                     writeln("waiting all thread finish");
                     // thread_suspendAll();
