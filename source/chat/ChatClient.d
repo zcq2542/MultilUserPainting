@@ -1,8 +1,5 @@
-// @file chat/client.d
-//
-// After starting server (rdmd server.d)
-// then start as many clients as you like with "rdmd client.d"
-//
+module client.ChatClient;
+
 import std.socket;
 import std.stdio;
 import std.conv;
@@ -15,6 +12,9 @@ class ChatClient{
     private int ClientId;
 
 
+    /**
+        Constructor. Initializes socket.
+    */
     this() {
         this.socket = new Socket(AddressFamily.INET, SocketType.STREAM);
         this.buffer = new char[1024];
@@ -25,7 +25,10 @@ class ChatClient{
         destroy(this.buffer);
     }
 
-    void connect() {
+    /**
+        Initializes socket and connects with the client.
+    */
+    public void connect() {
         writeln("Starting client...attempt to create socket");
         socket.connect(new InternetAddress("localhost", 50002));
         // auto L = socket.receive(buffer);
@@ -40,7 +43,11 @@ class ChatClient{
     static void testThread() {
         writeln("test thread ok");
     }
-    static void receiveThread() {
+
+    /**
+        Thread to receive and print messages.
+    */
+    public static void receiveThread() {
         // Loop to receive message
         scope(exit) this.socket.close();
         while (true) {
@@ -60,7 +67,10 @@ class ChatClient{
         this.socket.close();
     }
 
-    void run() {
+    /**
+        Main run method.
+    */
+    public void run() {
         this.connect();
         // spawn(&receiveThread, cast(shared) this.socket);
         spawn(&receiveThread);

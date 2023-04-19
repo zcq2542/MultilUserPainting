@@ -37,5 +37,8 @@
 		"source/chat/ChatClient.d",
 		"source/chat/ChatServer.d",
 		"source/server/ServerApp.d"
-	]
+	],
+	"ddoxOptions": {
+		"sourcePaths": ["source"]
+	}
 }

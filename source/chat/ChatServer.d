@@ -1,3 +1,5 @@
+module chat.ChatServer;
+
 import std.socket;
 import std.algorithm;
 import std.array;
@@ -9,27 +11,29 @@ class ChatServer {
     private SocketSet readSet;
     private Socket[] connectedClientsList;
     private byte[] buffer;
-    this() {
 
-        // A SocketSet is equivalent to 'fd_set'
-        // https://linux.die.net/man/3/fd_set
-        // What SocketSet is used for, is to allow
-        // 'multiplexing' of sockets -- or put another
-        // way, the ability for multiple clients
-        // to connect a socket to this single server
-        // socket.
+    /**
+        Constructor
+    */
+    this() {
         this.readSet = new SocketSet();
         // Message buffer will be 1024 bytes
         this.buffer = new byte[10240];
     }
 
+    /**
+        Destructor
+    */
     ~this() {
         destroy(buffer);
         this.listener.close();
     }
 
 
-    void run() {
+    /**
+        Main runner for chat server. Manages connections with the client.
+    */
+    public void run() {
         this.listener = new Socket(AddressFamily.INET, SocketType.STREAM);
         scope(exit) this.listener.close();
         // Set the hostname and port for the socket

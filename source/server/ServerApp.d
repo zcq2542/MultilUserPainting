@@ -24,6 +24,9 @@ class ServerApp {
     private int port;
 
 
+    /**
+        Constructor. Takes in the port and initializes command history
+    */
     this(int port) {
 
         // A SocketSet is equivalent to 'fd_set'
@@ -43,11 +46,17 @@ class ServerApp {
 
     }
 
+    /**
+        Destructor
+    */
     ~this() {
         destroy(buffer);
         this.listener.close();
     }
 
+    /**
+        Sends the complete command history to the respective clientId.
+    */
     void sendAllCommandHistory(int ClientId, Socket clientSock) {
         // auto clientSock = this.connectedClientsList[ClientId-1];
         // clientSock.setOption(SocketOptionLevel.TCP, SocketOption.SNDTIMEO, dur!"seconds"(1));
@@ -201,6 +210,29 @@ class ServerApp {
     }
 }
 
+class MockSocket : Socket {
+    public string* log;
+    this(ref string log) {
+        this.log = &log;
+    }
+    override public long send(scope const(void)[] data) {
+        *log ~= "send called";
+        return 0;
+    }
+}
+
+@("Check if send is called as expected when command history is empty")
+unittest {
+    ServerApp serverApp = new ServerApp(49493);
+    string log = "";
+    Socket skt = new MockSocket(log);
+    serverApp.sendAllCommandHistory(0, skt);
+    assert(log.equal("send called") == true);
+}
+
+/**
+    Main method
+*/
 void main(string[] args) {
     int port;
 
