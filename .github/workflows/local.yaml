@@ -33,7 +33,7 @@ jobs:
         run: D_VERSION=$(wget -qO - http://downloads.dlang.org/releases/LATEST) && wget -qO dmd.deb http://downloads.dlang.org/releases/2.x/${D_VERSION}/dmd_${D_VERSION}-0_amd64.deb && sudo apt install -y ./dmd.deb && dmd --version && rm -rf dmd.deb
       #      - name: Install SDL2 deb
       #        run: wget http://http.us.debian.org/debian/pool/main/libs/libsdl2/libsdl2-dev_2.0.14+dfsg2-3+deb11u1_amd64.deb && sudo apt install -y ./libsdl2-dev_2.0.14+dfsg2-3+deb11u1_amd64.deb && sudo apt-get -f install -y
-      - name: Run dscanner
-        run: dub run dscanner -- --report
       - name: build and run tests of project code
         run: dub test
+      - name: Run dscanner
+        run: dub run dscanner -- --report
