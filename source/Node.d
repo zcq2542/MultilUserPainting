@@ -1,5 +1,7 @@
 
-
+/** 
+ * Node class used in Deque.d
+ */
 class Node(T){
 	T val;
 	Node!(T) next;
@@ -15,9 +17,4 @@ class Node(T){
         this.next = null;
         this.prev = null;
     }
-
-    // ~this(){
-    //     this.next = null;
-    //     this.prev = null;   
-    // }
 }

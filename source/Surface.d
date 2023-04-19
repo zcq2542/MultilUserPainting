@@ -6,6 +6,10 @@ import bindbc.sdl;
 
 import Color:Color;
 
+/** 
+ * Surface struct.
+ * Contains SDL_Surface pointer. Surface width and height.
+ */
 struct Surface{
 	SDL_Surface* imgSurface;
 	int width;
@@ -25,6 +29,14 @@ struct Surface{
   	// Update a pixel ...
   	// SomeFunction()
     /// Function for updating the pixels in a surface to a 'blue-ish' color.
+
+    /** 
+     * update pixel with color
+     * Params:
+     *   xPos = x coordianate of pixel.
+     *   yPos = y coordinate of pixel.
+     *   color = color to update.
+     */
     void UpdateSurfacePixel(int xPos, int yPos, Color color){
 	    if(xPos < 0 || yPos < 0 || xPos > width || yPos > height){
 		    return;
@@ -48,7 +60,13 @@ struct Surface{
   	
   	// Check a pixel color
   	// Some OtherFunction()
-
+    /** 
+     * get color of pixel
+     * Params:
+     *   xPos = x coordinate of pixel
+     *   yPos = y coordinate of pixel
+     * Returns: a color byte array.
+     */
 	ubyte[] getPixel(int xPos, int yPos){
 	    ubyte* pixelArray = cast(ubyte*)imgSurface.pixels;
 	    ubyte[] res = new ubyte[3];

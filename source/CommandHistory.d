@@ -19,13 +19,18 @@ class CommandHistory : Deque!(int[]){
     ~this() {
         // destroy(this.historyArray);
     }
+
     /**
      * get the index of currentPointer. 
      */ 
     public int getCurPos() {
         return curPos;
     }
-
+    /** 
+     * set the position of currentPointer
+     * Params:
+     *   Pos = position(min: -1)
+     */
     public void setCurPos(int Pos) {
         Node!(int[]) temp = this.frontPointer;
         int i = -1;
