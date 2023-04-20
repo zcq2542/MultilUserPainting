@@ -36,9 +36,11 @@
 	"excludedSourceFiles": [
 		"source/chat/ChatClient.d",
 		"source/chat/ChatServer.d",
-		"source/server/ServerApp.d"
+		"source/server/app.d"
 	],
 	"ddoxOptions": {
-		"sourcePaths": ["source"]
+		"sourcePaths": [
+			"source"
+		]
 	}
 }

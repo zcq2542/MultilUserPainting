@@ -1,4 +1,4 @@
-module ServerApp;
+module server.ServerApp;
 
 // @file source/APPServer.d
 //
@@ -208,47 +208,4 @@ class ServerApp {
             }
         }
     }
-}
-
-class MockSocket : Socket {
-    public string* log;
-    this(ref string log) {
-        this.log = &log;
-    }
-    override public long send(scope const(void)[] data) {
-        *log ~= "send called";
-        return 0;
-    }
-}
-
-@("Check if send is called as expected when command history is empty")
-unittest {
-    ServerApp serverApp = new ServerApp(49493);
-    string log = "";
-    Socket skt = new MockSocket(log);
-    serverApp.sendAllCommandHistory(0, skt);
-    assert(log.equal("send called") == true);
-}
-
-/**
-    Main method
-*/
-void main(string[] args) {
-    int port;
-
-    if (args.length != 2) {
-        port = 50001;
-    } else {
-    try {
-        port = to!int(args[1]);
-    } catch (Exception e) {
-        port = 50001;
-    }
-    }
-
-
-    ServerApp serverApp = new ServerApp(port);
-    write("Running the server on localhost and on port ");
-    writeln(port);
-    serverApp.run();
 }
