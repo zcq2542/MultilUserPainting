@@ -22,12 +22,12 @@ class ServerApp {
     private int[] buffer;
     private CommandHistory commandHistory;
     private int port;
-
+    private string host;
 
     /**
         Constructor. Takes in the port and initializes command history
     */
-    this(int port) {
+    this(string host, int port) {
 
         // A SocketSet is equivalent to 'fd_set'
         // https://linux.die.net/man/3/fd_set
@@ -42,6 +42,7 @@ class ServerApp {
         this.buffer = new int[10240];
 
         this.commandHistory = new CommandHistory();
+	this.host = host;
         this.port = port;
 
     }
@@ -85,7 +86,6 @@ class ServerApp {
         this.listener = new Socket(AddressFamily.INET, SocketType.STREAM);
         scope(exit) this.listener.close();
         // Set the hostname and port for the socket
-        string host = "localhost";
         ushort portCur = cast(ushort) port;
         // NOTE: It's possible the port number is in use if you are not able
         //       to connect. Try another one.

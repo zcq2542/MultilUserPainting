@@ -7,20 +7,18 @@ import std.conv;
 
 void main(string[] args) {
     int port;
-
-    if (args.length != 2) {
+    string ip;
+    if (args.length != 3) {
+	ip = "0.0.0.0";
         port = 50001;
     } else {
-    try {
-        port = to!int(args[1]);
-    } catch (Exception e) {
-        port = 50001;
-    }
-    }
+	ip = args[1];
+        port = to!int(args[2]);
+    } 
 
-
-    ServerApp serverApp = new ServerApp(port);
-    write("Running the server on localhost and on port ");
-    writeln(port);
+    ServerApp serverApp = new ServerApp(ip, port);
+    writeln("Running the server on IP and on port ");
+    writeln("IP: ", ip);
+    writeln("Port: ", port);
     serverApp.run();
 }

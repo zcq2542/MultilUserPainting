@@ -4,21 +4,24 @@ import std.socket;
 import std.algorithm;
 import std.array;
 import std.stdio;
-
+import std.conv;
 
 class ChatServer {
     private Socket listener;
     private SocketSet readSet;
     private Socket[] connectedClientsList;
     private byte[] buffer;
-
+    private string host;
+    private int port;
     /**
         Constructor
     */
-    this() {
+    this(string host, int port) {
         this.readSet = new SocketSet();
         // Message buffer will be 1024 bytes
         this.buffer = new byte[10240];
+	this.host = host;
+	this.port = port;
     }
 
     /**
@@ -37,16 +40,16 @@ class ChatServer {
         this.listener = new Socket(AddressFamily.INET, SocketType.STREAM);
         scope(exit) this.listener.close();
         // Set the hostname and port for the socket
-        string host = "localhost";
-        ushort port = 50002;
         // NOTE: It's possible the port number is in use if you are not able
         //       to connect. Try another one.
-        this.listener.bind(new InternetAddress(host,port));
+        this.listener.bind(new InternetAddress(this.host,cast(ushort)this.port));
         // Allow 4 connections to be queued up
         this.listener.listen(4);
 
         // Main application loop for the server
-        writeln("Chat Setrver Awaiting client connections");
+        writeln("Chat Server Awaiting client connections");
+	writeln("Chat server IP: ", host);
+	writeln("Chat server port: ", port);
         bool serverIsRunning=true;
         while(serverIsRunning){
             // Clear the readSet
@@ -111,8 +114,18 @@ class ChatServer {
         }
     }
 }
-void main() {
-    ChatServer chatServer = new ChatServer();
+void main(string[] args) {
+
+    int port;
+    string ip;
+    if (args.length != 3) {
+	ip = "0.0.0.0";
+        port = 50002;
+    } else {
+	ip = args[1];
+        port = to!int(args[2]);
+    }
+    ChatServer chatServer = new ChatServer(ip, port);
     chatServer.run();
 }
 

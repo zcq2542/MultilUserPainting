@@ -14,7 +14,7 @@
 We build the App on Ubuntu platform.
 1. Installing SDL if you don't have. (https://wiki.libsdl.org/SDL2/Installation)
 2. Installing GTKD. with command apt-get install libgtkd-3-dev
-3. go to the dir FinalProject-AURORA/source/  run the server as rdmd -I./common server/ServerApp.d
-4. go to the dir FinalProject-AURORA/source/chat  run the chat server as rdmd ChatServer.d
-4. go to root dir. FinalProject-AURORA. dub run -- 127.0.0.1 50001
-then the SDLApp should be running.
+3. go to the dir FinalProject-AURORA/source/  run the server as rdmd -I./common server/app.d 0.0.0.0 50003
+4. go to the dir FinalProject-AURORA/source/chat  run the chat server as rdmd -I./common chat/ChatServer 0.0.0.0 50004
+4. go to root dir. FinalProject-AURORA. dub run -- 0.0.0.0 50003 0.0.0.0 50004
+then the SDLApp should be running along with chat.

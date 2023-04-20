@@ -104,9 +104,11 @@ class SDLApp{
 	string[] args;
     int port;
     string ip;
+    int port2;
+    string ip2;
 
 
-    this(string[] args, string ip, int port){
+    this(string[] args, string ip, int port, string ip2, int port2){
 	 	// Handle initialization...
  		// SDL_Init
         window = SDL_CreateWindow("D SDL Painting",
@@ -121,6 +123,8 @@ class SDLApp{
 		this.args = args;
         this.ip = ip;
         this.port = port;
+	this.ip2 = ip2;
+	this.port2 = port2;
 	    this.buffer2 = new char[1024];
 	    this.chatUpdated = false;
 	    this.chatHistoryStr = "";
@@ -135,7 +139,7 @@ class SDLApp{
     	//       able to connect. Try another one.
         try {
             socket1.connect(new InternetAddress(this.ip, cast(ushort) this.port));
-	        socket2.connect(new InternetAddress("0.0.0.0", 50002));
+	    socket2.connect(new InternetAddress(this.ip2, cast(ushort) this.port2));
             writeln("Connected");
             auto received = socket1.receive(buffer);
             this.ClientId = (cast(int[])buffer[0 .. 4])[0];
@@ -168,7 +172,7 @@ class SDLApp{
                 }
             }
             long nbytes = socket1.receive(buffer);
-            writeln("received nbytes: ", nbytes);
+            //writeln("received nbytes: ", nbytes);
             // If server disconnected, exit thread
             if (nbytes <= 1) {
                 writeln("Server disconnected");
@@ -180,10 +184,10 @@ class SDLApp{
             int intL = cast(int)nbytes/4;
 		    int[] array = buffer[1 .. intL];
             //int[] array = buffer[1 .. nbytes/4];
-            writeln("array:", array);
+            //writeln("array:", array);
             int[] cmd = new int[intL];
             cmd[] = buffer[0 .. intL];
-            writeln("copy ok");
+            //writeln("copy ok");
             if (type == 0)
                 localCommandHistory.add(cmd);
             else if (type == -1)
@@ -211,7 +215,7 @@ class SDLApp{
 
         // Close the socket
         if (socket1) socket1.close();
-        writeln("receive thread end");
+        //writeln("receive thread end");
     }
 
     /** 
@@ -307,8 +311,8 @@ static void RunGUI(immutable string[] args)
 	myWindow.setDefaultSize(0,0);
 	int w,h;
 	myWindow.getSize(w,h);
-	writeln("width   : ",w);
-	writeln("height  : ",h);
+	//writeln("width   : ",w);
+	//writeln("height  : ",h);
 	myWindow.move(100,120);
 	
 	// Delegate to call when we destroy our application
@@ -427,14 +431,14 @@ static void RunGUI(immutable string[] args)
         while(true) {
             writeln("start to receive command history");
             auto receivedL = this.socket1.receive(this.buffer); // num of bytes received
-            writeln(receivedL);
+            //writeln(receivedL);
             if (receivedL <= 1) break;
             int l = cast(int) receivedL / 4; // num of integer received.
-            writeln("buffer: ", buffer[0 .. l]);
+            //writeln("buffer: ", buffer[0 .. l]);
             if (commandReceived == 0) {
                 
                 curPos = this.buffer[0 .. l][0];
-                writeln("curPos: ", curPos);
+                //writeln("curPos: ", curPos);
             }
             else {
                 int[] command = this.buffer[0 .. l].dup; // deep copy.
@@ -459,13 +463,13 @@ static void RunGUI(immutable string[] args)
                 synchronized{
                     QuitApp();
                     end = true;
-                    writeln("main end:", end);
+                    //writeln("main end:", end);
                 }
                 ubyte[] emptyMsg = [1];
                 long bytesSent = skt.send(emptyMsg);
-                writeln("Sent ", bytesSent, " bytes");
+                //writeln("Sent ", bytesSent, " bytes");
 		long bytesSent2 = skt2.send("e");
-                writeln("Sent ", bytesSent2, " bytes to server 2");
+                //writeln("Sent ", bytesSent2, " bytes to server 2");
                 // socket.close();
                 writeln("waiting all thread finish");
                 // thread_suspendAll();
@@ -484,7 +488,7 @@ static void RunGUI(immutable string[] args)
             }else if(e.type == SDL_MOUSEBUTTONUP){
                 drawing=false;
                 coordinates[0] = 0; // mark command type as client draw.
-                writeln(coordinates);
+                //writeln(coordinates);
                 skt.send(coordinates);
                 this.localCommandHistory.add(coordinates);
                 coordinates.length = 0;
@@ -552,7 +556,7 @@ static void RunGUI(immutable string[] args)
 
         receiveAllCommand();
         auto t = spawn(&receiveThread); // thread to receive and draw
-	    auto t2 = spawn(&receiveThread2);
+	auto t2 = spawn(&receiveThread2);
         immutable string[] args2 = this.args.dup;
         spawn(&RunGUI,args2);
 
