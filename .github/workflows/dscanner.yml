@@ -1,0 +1,15 @@
+name: Dscanner
+
+on: [push]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Dscanner
+      run: |
+        sudo wget https://github.com/dlang-community/D-Scanner/releases/download/v0.10.0/dscanner_0.10.0_amd64.deb
+        sudo dpkg -i dscanner_0.10.0_amd64.deb
+    - name: Run Dscanner
+      run: dscanner source/
